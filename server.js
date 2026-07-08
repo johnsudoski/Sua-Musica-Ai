@@ -37,7 +37,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ─── Servir frontend estático ───
-const frontendPath = path.join(__dirname, '..', 'frontend');
+// Em produção (Railway) os arquivos ficam em ./public; localmente em ../frontend
+const frontendPath = fs.existsSync(path.join(__dirname, 'public'))
+  ? path.join(__dirname, 'public')
+  : path.join(__dirname, '..', 'frontend');
 app.use(express.static(frontendPath));
 
 // ─── Criar diretório de downloads temporários ───
