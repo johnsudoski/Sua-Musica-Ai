@@ -91,7 +91,11 @@ async function checkJobStatus(jobId) {
   if (status === 'COMPLETED') {
     const tracks = result?.tracks;
     if (!tracks?.length) throw new Error('Geração completou mas sem tracks');
-    return { status: 'COMPLETED', audioUrl: tracks[0].audioUrl };
+    return {
+      status: 'COMPLETED',
+      audioUrl: tracks[0].audioUrl,
+      lyrics: tracks[0].lyric || tracks[0].lyrics || null,
+    };
   }
   if (status === 'FAILED' || status === 'ERROR') {
     return { status: 'FAILED', error: error || 'motivo desconhecido' };
@@ -112,7 +116,7 @@ async function generateMusic(formData, maxSeconds = 360) {
     delay = Math.min(delay * 1.2, 15000);
 
     const result = await checkJobStatus(jobId);
-    if (result.status === 'COMPLETED') return { audioUrl: result.audioUrl, jobId };
+    if (result.status === 'COMPLETED') return { audioUrl: result.audioUrl, lyrics: result.lyrics || null, jobId };
     if (result.status === 'FAILED') throw new Error(`Geração falhou: ${result.error}`);
   }
   throw new Error(`Timeout: geração não completou em ${maxSeconds}s`);

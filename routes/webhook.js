@@ -16,8 +16,8 @@ function detectProductType(payload) {
   const price   = payload?.sale?.price    || payload?.order?.price    || payload?.price    || 0;
   const pack3Id = process.env.TICTO_VIDEO_PRODUCT || 'OD8AA1433';
 
-  if (offerId === pack3Id) return '3musicas';
-  if (Number(price) >= 3000) return '3musicas'; // R$30+ = pacote 3 músicas
+  if (offerId === pack3Id) return 'video';
+  if (Number(price) >= 3000) return 'video'; // R$30+ = MP3 + vídeo com letra
   return 'mp3';
 }
 

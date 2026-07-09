@@ -235,4 +235,109 @@ async function sendPack3Email({ to, nomeDestinatario, downloadUrls }) {
   return { messageId: 'no-config', to };
 }
 
-module.exports = { sendDownloadEmail, sendPack3Email };
+// ── Template: MP3 + Vídeo com Letra ──
+function buildVideoHtml({ nomeDestinatario, mp3DownloadUrl, videoDownloadUrl, appUrl }) {
+  return `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sua música + vídeo com letra estão prontos! 🎵</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0D0D1A; color: #fff; margin: 0; padding: 20px; }
+    .container { max-width: 580px; margin: 0 auto; background: #161628; border-radius: 16px; overflow: hidden; }
+    .header { background: linear-gradient(135deg, #E91E8C, #7B2FBE); padding: 40px 30px; text-align: center; }
+    .header h1 { margin: 0; font-size: 28px; color: #fff; }
+    .header p { margin: 8px 0 0; color: rgba(255,255,255,0.85); font-size: 16px; }
+    .body { padding: 32px 30px; }
+    .body p { color: #ccc; line-height: 1.6; margin: 0 0 16px; }
+    .name { color: #E91E8C; font-weight: bold; }
+    .btn { display: block; color: #fff !important; text-decoration: none; text-align: center; padding: 15px 32px; border-radius: 50px; font-size: 17px; font-weight: bold; margin: 12px 0; }
+    .btn-mp3 { background: linear-gradient(135deg, #E91E8C, #7B2FBE); }
+    .btn-video { background: linear-gradient(135deg, #7B2FBE, #3D0E6B); border: 2px solid #E91E8C; }
+    .divider { border: none; border-top: 1px solid #2a2a45; margin: 24px 0; }
+    .note { font-size: 13px; color: #888; }
+    .footer { padding: 24px 30px; border-top: 1px solid #2a2a45; text-align: center; }
+    .footer p { color: #555; font-size: 13px; margin: 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎵 SuaMúsicaAI</h1>
+      <p>Música + vídeo com letra prontos para você!</p>
+    </div>
+    <div class="body">
+      <p>Olá! 💕</p>
+      <p>
+        A música personalizada para <span class="name">${nomeDestinatario}</span> ficou incrível!
+        Você recebeu <strong>dois arquivos</strong>:
+      </p>
+      <p><strong>🎵 MP3 — áudio completo</strong></p>
+      <a href="${mp3DownloadUrl}" class="btn btn-mp3">⬇️ Baixar MP3 agora</a>
+      <hr class="divider">
+      <p><strong>🎬 MP4 — vídeo animado com letra</strong><br>
+        <span style="font-size:13px;color:#aaa;">Perfeito para enviar no WhatsApp, Stories do Instagram e TikTok!</span>
+      </p>
+      <a href="${videoDownloadUrl}" class="btn btn-video">🎬 Baixar Vídeo com Letra</a>
+      <p class="note" style="margin-top:20px;">
+        ⏰ <strong>Importante:</strong> Os links expiram em 48 horas.
+        Baixe e salve os arquivos agora!
+      </p>
+      <p>
+        Cause aquela emoção inesquecível em <span class="name">${nomeDestinatario}</span>! 🥺❤️
+      </p>
+      <p>Com carinho,<br><strong>Equipe SuaMúsicaAI</strong></p>
+    </div>
+    <div class="footer">
+      <p>SuaMúsicaAI • O presente mais emocionante do Brasil 🇧🇷</p>
+      <p style="margin-top:8px;"><a href="${appUrl}" style="color:#E91E8C;">Criar outra música</a></p>
+    </div>
+  </div>
+</body>
+</html>`.trim();
+}
+
+/**
+ * Envia email com MP3 + vídeo com letra (produto Vídeo com Letra).
+ */
+async function sendVideoEmail({ to, nomeDestinatario, mp3DownloadUrl, videoDownloadUrl }) {
+  const appUrl  = process.env.APP_URL || 'https://suamusicaai.com.br';
+  const from    = process.env.EMAIL_FROM || 'SuaMúsicaAI <onboarding@resend.dev>';
+  const subject = `🎵🎬 Sua música + vídeo com letra para ${nomeDestinatario} estão prontos!`;
+  const html    = buildVideoHtml({ nomeDestinatario, mp3DownloadUrl, videoDownloadUrl, appUrl });
+  const text    = `Sua música + vídeo para ${nomeDestinatario} estão prontos!\n\n`
+    + `MP3: ${mp3DownloadUrl}\nVídeo: ${videoDownloadUrl}\n\n`
+    + '⏰ Links expiram em 48h. Baixe agora!\n\nEquipe SuaMúsicaAI';
+
+  if (process.env.RESEND_API_KEY) {
+    console.log(`[email] Enviando Vídeo+MP3 via Resend para ${to}`);
+    const info = await sendViaResend({ to, from, subject, html, text });
+    console.log(`[email] Resend OK: ${info.id}`);
+    return info;
+  }
+
+  if (process.env.SMTP_HOST) {
+    console.log(`[email] Enviando Vídeo+MP3 via SMTP para ${to}`);
+    const info = await sendViaSmtp({ to, from, subject, html, text });
+    console.log(`[email] SMTP OK: ${info.messageId}`);
+    return info;
+  }
+
+  if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
+    console.log(`[email] Enviando Vídeo+MP3 via Gmail para ${to}`);
+    const info = await sendViaGmail({ to, from, subject, html, text });
+    console.log(`[email] Gmail OK: ${info.messageId}`);
+    return info;
+  }
+
+  console.log('\n====== [EMAIL VIDEO - SEM CONFIG] ======');
+  console.log('Para:', to);
+  console.log('MP3:', mp3DownloadUrl);
+  console.log('Vídeo:', videoDownloadUrl);
+  console.log('==========================================\n');
+  return { messageId: 'no-config', to };
+}
+
+module.exports = { sendDownloadEmail, sendPack3Email, sendVideoEmail };

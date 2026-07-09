@@ -23,28 +23,34 @@ router.get('/download/:token', async (req, res) => {
     return res.status(410).send('Este link de download expirou (validade: 48h). Entre em contato com o suporte.');
   }
 
+  // Detecta tipo de mídia
+  const isVideo   = tokenData.isVideo || !!tokenData.videoUrl;
+  const mediaUrl  = tokenData.videoUrl || tokenData.audioUrl;
+  const extension = isVideo ? '.mp4' : '.mp3';
+  const mimeType  = isVideo ? 'video/mp4' : 'audio/mpeg';
+
   // Se temos arquivo local
   if (tokenData.filePath && fs.existsSync(tokenData.filePath)) {
     const order = global.pendingOrders.get(tokenData.orderId);
     const nome = order?.formData?.nomeDestinatario || 'musica';
-    const filename = `SuaMusicaAI-${nome}.mp3`.replace(/[^a-zA-Z0-9\-_.]/g, '_');
+    const filename = `SuaMusicaAI-${nome}${extension}`.replace(/[^a-zA-Z0-9\-_.]/g, '_');
 
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    res.setHeader('Content-Type', 'audio/mpeg');
+    res.setHeader('Content-Type', mimeType);
     return fs.createReadStream(tokenData.filePath).pipe(res);
   }
 
   // Se temos URL remota (proxy para manter token seguro)
-  if (tokenData.audioUrl) {
+  if (mediaUrl) {
     const order = global.pendingOrders.get(tokenData.orderId);
     const nome = order?.formData?.nomeDestinatario || 'musica';
-    const filename = `SuaMusicaAI-${nome}.mp3`.replace(/[^a-zA-Z0-9\-_.]/g, '_');
+    const filename = `SuaMusicaAI-${nome}${extension}`.replace(/[^a-zA-Z0-9\-_.]/g, '_');
 
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    res.setHeader('Content-Type', 'audio/mpeg');
+    res.setHeader('Content-Type', mimeType);
 
-    https.get(tokenData.audioUrl, (audioRes) => {
-      audioRes.pipe(res);
+    https.get(mediaUrl, (mediaRes) => {
+      mediaRes.pipe(res);
     }).on('error', () => {
       res.status(500).send('Erro ao baixar arquivo. Tente novamente.');
     });

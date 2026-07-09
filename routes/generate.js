@@ -6,6 +6,7 @@ const express = require('express');
 const crypto = require('crypto');
 const { startGeneration, checkJobStatus, generateFull } = require('../services/suno');
 const emailService = require('../services/email');
+const { generateVideo } = require('../services/video');
 
 const router = express.Router();
 
@@ -78,6 +79,7 @@ router.get('/preview-status/:jobId', async (req, res) => {
 
     if (result.status === 'COMPLETED') {
       order.previewUrl = result.audioUrl;
+      order.lyrics = result.lyrics || null; // guarda letra para vídeo posterior
       order.status = 'preview_ready';
       console.log(`[preview-status] Job ${jobId} pronto → orderId ${orderId}`);
       return res.json({ status: 'ready', previewUrl: result.audioUrl, orderId });
@@ -118,43 +120,46 @@ router.post('/generate-full', async (req, res) => {
   const emailForDelivery = emailFromWebhook || order.formData?.emailEntrega;
 
   try {
-    if (productType === '3musicas') {
-      // ── PACOTE 3 MÚSICAS: gera 3 músicas em paralelo ──
-      console.log(`[generate-full] Gerando PACOTE 3 MÚSICAS para ${orderId}`);
+    if (productType === 'video') {
+      // ── VÍDEO COM LETRA: gera música full + vídeo animado Creatomate ──
+      console.log(`[generate-full] Gerando MP3 + VÍDEO para ${orderId}`);
 
-      const [r1, r2, r3] = await Promise.all([
-        generateFull(order.formData),
-        generateFull(order.formData),
-        generateFull(order.formData),
-      ]);
+      const { audioUrl, lyrics: newLyrics } = await generateFull(order.formData);
+      const lyrics = order.lyrics || newLyrics; // prefere letra capturada no preview
 
-      // Cria 3 tokens de download (48h)
-      const tokens = [r1, r2, r3].map(({ audioUrl }) => {
-        const token = crypto.randomBytes(32).toString('hex');
-        const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
-        global.downloadTokens.set(token, { orderId, audioUrl, expiresAt });
-        return { token, audioUrl };
+      console.log(`[generate-full] Gerando vídeo com Creatomate para ${orderId}...`);
+      const { videoUrl } = await generateVideo({
+        audioUrl,
+        nomeDestinatario: order.formData.nomeDestinatario,
+        lyrics,
       });
 
-      order.status       = 'complete';
-      order.downloadToken = tokens[0].token; // token principal (compatibilidade)
-      order.pack3Tokens   = tokens.map(t => t.token);
-      order.fullAudioUrl  = tokens[0].audioUrl;
+      const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
+
+      const mp3Token = crypto.randomBytes(32).toString('hex');
+      global.downloadTokens.set(mp3Token, { orderId, audioUrl, expiresAt });
+
+      const videoToken = crypto.randomBytes(32).toString('hex');
+      global.downloadTokens.set(videoToken, { orderId, videoUrl, expiresAt, isVideo: true });
+
+      order.status        = 'complete';
+      order.downloadToken = mp3Token;
+      order.videoToken    = videoToken;
+      order.fullAudioUrl  = audioUrl;
+      order.fullVideoUrl  = videoUrl;
 
       if (emailForDelivery) {
-        const downloadUrls = tokens.map(
-          t => `${process.env.APP_URL}/api/download/${t.token}`
-        );
-        await emailService.sendPack3Email({
+        await emailService.sendVideoEmail({
           to: emailForDelivery,
           nomeDestinatario: order.formData.nomeDestinatario,
-          downloadUrls,
+          mp3DownloadUrl:   `${process.env.APP_URL}/api/download/${mp3Token}`,
+          videoDownloadUrl: `${process.env.APP_URL}/api/download/${videoToken}`,
         });
       } else {
-        console.warn(`generate-full [3musicas]: sem email para ${orderId}`);
+        console.warn(`generate-full [video]: sem email para ${orderId}`);
       }
 
-      return res.json({ success: true, downloadTokens: tokens.map(t => t.token), message: 'Pacote 3 músicas gerado e email enviado!' });
+      return res.json({ success: true, downloadToken: mp3Token, videoToken, message: 'MP3 + vídeo gerados e email enviado!' });
 
     } else {
       // ── MP3 SIMPLES: gera 1 música ──
