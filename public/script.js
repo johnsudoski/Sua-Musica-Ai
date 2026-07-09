@@ -27,15 +27,17 @@ if (textarea && charCountEl) {
 }
 
 // ─── Estado ───
-var _orderId      = null;
-var _previewUrl   = null;
-var _pollTO       = null;
-var _pollDone     = false;
-var _loadTimerTO  = null;
-var _loadTimerSec = 0;
-var _previewTO    = null;
-var _previewSec   = 0;
-var _audioPlaying = false;
+var _orderId         = null;
+var _previewUrl      = null;
+var _pollTO          = null;
+var _pollDone        = false;
+var _loadTimerTO     = null;
+var _loadTimerSec    = 0;
+var _previewTO       = null;
+var _previewSec      = 0;
+var _audioPlaying    = false;
+var _post30Triggered = false;
+var _timeUpdateFn    = null;
 
 // ─── DOM ───
 var form           = document.getElementById('musicForm');
@@ -136,23 +138,28 @@ function showPreview(url, nome) {
     audioEl.src = url;
     audioEl.load();
 
-    // Limitar a 30 segundos
-    audioEl.addEventListener('timeupdate', function() {
-      if (audioEl.currentTime >= 30) {
+    // Limitar a 40 segundos — função nomeada para poder remover o listener depois
+    if (_timeUpdateFn) audioEl.removeEventListener('timeupdate', _timeUpdateFn);
+    _post30Triggered = false;
+    _timeUpdateFn = function() {
+      if (_post30Triggered) return;
+      if (audioEl.currentTime >= 40) {
+        _post30Triggered = true;
         audioEl.pause();
-        audioEl.currentTime = 30;
+        audioEl.currentTime = 40;
         _audioPlaying = false;
         if (playBtn) playBtn.textContent = '▶ Ouvir preview novamente';
         showPost30(nome);
       }
-    });
+    };
+    audioEl.addEventListener('timeupdate', _timeUpdateFn);
 
     // Tentar auto-play
     var pp = audioEl.play();
     if (pp && typeof pp.catch === 'function') {
       pp.then(function() { _audioPlaying = true; if (playBtn) playBtn.textContent = '⏸ Pausar'; })
         .catch(function() {
-          if (playBtn) playBtn.textContent = '▶ Toque para ouvir os primeiros 30 segundos';
+          if (playBtn) playBtn.textContent = '▶ Toque para ouvir os primeiros 40 segundos';
         });
     }
   }
@@ -192,7 +199,10 @@ if (playBtn) {
       _audioPlaying = false;
       playBtn.textContent = '▶ Ouvir preview grátis';
     } else {
-      if (audioEl.currentTime >= 30) audioEl.currentTime = 0;
+      if (audioEl.currentTime >= 40) {
+        audioEl.currentTime = 0;
+        _post30Triggered = false;
+      }
       audioEl.play().then(function() {
         _audioPlaying = true;
         playBtn.textContent = '⏸ Pausar';
@@ -211,6 +221,8 @@ if (form) {
     var memoria = (document.getElementById('memoria') || {value:''}).value.trim();
     var gEl     = document.querySelector('input[name="genero"]:checked');
     var genero  = gEl ? gEl.value : '';
+    var vozEl   = document.querySelector('input[name="voz"]:checked');
+    var voz     = vozEl ? vozEl.value : 'feminino';
     var email   = (document.getElementById('emailEntrega') || {value:''}).value.trim();
 
     if (!nome || !relacao || !memoria) {
@@ -226,6 +238,8 @@ if (form) {
     _pollDone = false;
     if (_pollTO) { clearTimeout(_pollTO); _pollTO = null; }
     if (audioEl) { audioEl.pause(); audioEl.src = ''; }
+    if (_timeUpdateFn && audioEl) { audioEl.removeEventListener('timeupdate', _timeUpdateFn); _timeUpdateFn = null; }
+    _post30Triggered = false;
     _audioPlaying = false;
     _previewUrl   = null;
 
@@ -248,6 +262,7 @@ if (form) {
         relacao:          relacao,
         memoria:          memoria,
         genero:           genero,
+        voz:              voz,
         emailEntrega:     email,
       }),
     })

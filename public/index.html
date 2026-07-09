@@ -2,9 +2,9 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SuaMúsicaAI — Ouve 30 segundos grátis. Paga só se amar.</title>
-  <meta name="description" content="IA cria uma música com o nome dela e a história de vocês. Preview grátis de 30 segundos. Só paga se amar. MP3 completo ou Vídeo com legenda." />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>SuaMúsicaAI — Ouve 40 segundos grátis. Paga só se amar.</title>
+  <meta name="description" content="IA cria uma música com o nome dela e a história de vocês. Preview grátis de 40 segundos. Só paga se amar. MP3 completo ou Vídeo com legenda." />
   <meta property="og:title" content="Ela vai chorar ouvindo uma música feita só pra ela" />
   <meta property="og:description" content="Preview 30s grátis. MP3 ou Vídeo com letra. Pronto em menos de 3 minutos." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -58,7 +58,7 @@
       z-index: 150;
       background: rgba(13,13,26,0.97);
       border-top: 1px solid rgba(233,30,140,0.35);
-      padding: 12px 20px 16px;
+      padding: 12px 20px calc(16px + env(safe-area-inset-bottom, 0px));
       display: flex;
       justify-content: center;
       align-items: center;
@@ -83,7 +83,7 @@
       text-align: center;
       line-height: 1.4;
     }
-    body { padding-bottom: 80px; }
+    body { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
 
     /* ─── VALUE TRIO ─── */
     .value-trio {
@@ -296,7 +296,7 @@
 
 <!-- ─── TOP BAR ─── -->
 <div class="top-announcement">
-  🎧 Preview 30 segundos 100% grátis · Paga só se amar · Pronto em menos de 3 minutos
+  🎧 Preview 40 segundos 100% grátis · Paga só se amar · Pronto em menos de 3 minutos
 </div>
 
 <!-- ─── NAV ─── -->
@@ -322,7 +322,7 @@
     <p class="hero-sub">
       Nossa IA compõe uma música com <strong>o nome dela</strong>, <strong>a história de vocês</strong>
       e o estilo que ela ama — sertanejo, MPB, pop, pagode.<br><br>
-      <strong>Ouça os primeiros 30 segundos de graça. Só paga se amar.</strong>
+      <strong>Ouça os primeiros 40 segundos de graça. Só paga se amar.</strong>
       Escolha o MP3 completo ou um Vídeo com a letra animada.
     </p>
 
@@ -345,7 +345,7 @@
     <div class="vtrio-card">
       <div class="vtrio-icon">🎧</div>
       <div>
-        <div class="vtrio-title">Ouve 30 segundos. Grátis. Agora.</div>
+        <div class="vtrio-title">Ouve 40 segundos. Grátis. Agora.</div>
         <div class="vtrio-desc">
           Preenche o formulário e em <strong>menos de 3 minutos</strong> sua música fica pronta.
           Sem cartão. Sem cadastro. Você ouve primeiro, <strong>decide depois</strong>.
@@ -510,7 +510,7 @@
         <div class="step-num">3</div>
         <div class="step-icon">🎧</div>
         <h3>Ouve 30s grátis</h3>
-        <p><strong>Sem pagar nada</strong>, você ouve os primeiros 30 segundos. Gostou? Escolhe o formato e paga.</p>
+        <p><strong>Sem pagar nada</strong>, você ouve os primeiros 40 segundos. Gostou? Escolhe o formato e paga.</p>
       </div>
       <div class="step-arrow">→</div>
       <div class="step">
@@ -607,14 +607,14 @@
     <div class="form-wrapper">
       <div class="form-header">
         <h2>Crie agora a música dela</h2>
-        <p>Preencha, ouça <strong>30 segundos grátis</strong> e escolha como quer receber</p>
+        <p>Preencha, ouça <strong>40 segundos grátis</strong> e escolha como quer receber</p>
       </div>
 
       <div class="freemium-banner">
         <div class="freemium-icon">🎁</div>
         <div>
           <h4>Preview grátis — sem cartão, sem cadastro</h4>
-          <p>Você ouve os primeiros 30 segundos de graça. Se amar, escolhe o MP3 (R$19,90) ou o Vídeo com letra (R$39,90). Se não amar, não paga nada.</p>
+          <p>Você ouve os primeiros 40 segundos de graça. Se amar, escolhe o MP3 (R$19,90) ou o Vídeo com letra (R$39,90). Se não amar, não paga nada.</p>
         </div>
       </div>
 
@@ -668,6 +668,14 @@
         </div>
 
         <div class="form-group">
+          <label>Voz da música 🎙</label>
+          <div class="genre-grid" style="grid-template-columns: repeat(2, 1fr);">
+            <label class="genre-option"><input type="radio" name="voz" value="feminino" checked /><span>♀ Feminina</span></label>
+            <label class="genre-option"><input type="radio" name="voz" value="masculino" /><span>♂ Masculina</span></label>
+          </div>
+        </div>
+
+        <div class="form-group">
           <label for="emailEntrega">Seu email para receber o arquivo 📧</label>
           <input type="email" id="emailEntrega" name="emailEntrega"
             placeholder="seu@email.com" required />
@@ -686,7 +694,7 @@
         <!-- PREVIEW -->
         <div id="previewSection" class="preview-section hidden">
           <div class="preview-header">
-            <span class="preview-badge">🎵 Preview gratuito — primeiros 30 segundos</span>
+            <span class="preview-badge">🎵 Preview gratuito — primeiros 40 segundos</span>
           </div>
           <div class="preview-player">
             <button type="button" id="playBtn" class="play-btn">▶ Ouvir preview grátis</button>
@@ -722,7 +730,7 @@
               <span id="post30Nome"></span>, o que achou? 🥹
             </p>
             <p style="font-size:14px;color:#f9a8d4;margin:0 0 16px;">
-              Essa foi só os primeiros 30 segundos. A música completa tem 3–4 minutos com a história toda de vocês.
+              Essa foi só os primeiros 40 segundos. A música completa tem 3–4 minutos com a história toda de vocês.
             </p>
             <div class="preview-options">
               <button type="button" onclick="openCheckout('mp3')" class="btn-buy-mp3" style="animation:pulse 2s ease-in-out infinite;">
@@ -762,7 +770,7 @@
     <div class="objection-grid">
       <div class="obj-card">
         <div class="obj-q">🤔 "E se eu não gostar?"</div>
-        <div class="obj-a">Você ouve 30 segundos grátis antes de pagar qualquer coisa. Se não amar, fecha a página. Não será cobrado. Zero risco.</div>
+        <div class="obj-a">Você ouve 40 segundos grátis antes de pagar qualquer coisa. Se não amar, fecha a página. Não será cobrado. Zero risco.</div>
       </div>
       <div class="obj-card">
         <div class="obj-q">🎤 "A voz é de robô?"</div>
@@ -829,7 +837,7 @@
       <span class="guarantee-icon">🛡️</span>
       <div>
         <strong>Ouça antes de pagar — sem risco</strong>
-        <p>Todo pedido começa com um preview grátis de 30 segundos. Você só paga se amar o que ouviu. Se não gostar, não cobra nada, sem burocracia.</p>
+        <p>Todo pedido começa com um preview grátis de 40 segundos. Você só paga se amar o que ouviu. Se não gostar, não cobra nada, sem burocracia.</p>
       </div>
     </div>
   </div>
@@ -842,7 +850,7 @@
     <div class="faq-list">
       <div class="faq-item">
         <button class="faq-q">O preview é realmente grátis? Tem algum truque? <span>+</span></button>
-        <div class="faq-a">É 100% grátis. Você não precisa colocar cartão nem cadastrar. Preencheu o formulário → a IA compõe → você ouve os primeiros 30 segundos de graça. Só depois de ouvir você decide se quer comprar.</div>
+        <div class="faq-a">É 100% grátis. Você não precisa colocar cartão nem cadastrar. Preencheu o formulário → a IA compõe → você ouve os primeiros 40 segundos de graça. Só depois de ouvir você decide se quer comprar.</div>
       </div>
       <div class="faq-item">
         <button class="faq-q">Qual a diferença do MP3 para o Vídeo com Letra? <span>+</span></button>

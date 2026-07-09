@@ -14,7 +14,7 @@ const router = express.Router();
 // Retorna jobId IMEDIATAMENTE (não bloqueia).
 // Frontend faz polling em GET /preview-status/:jobId
 router.post('/generate-preview', async (req, res) => {
-  const { nomeDestinatario, relacao, memoria, genero } = req.body;
+  const { nomeDestinatario, relacao, memoria, genero, voz } = req.body;
 
   if (!nomeDestinatario || !relacao || !memoria || !genero) {
     return res.status(400).json({ error: 'Preencha todos os campos obrigatórios.' });
@@ -26,13 +26,13 @@ router.post('/generate-preview', async (req, res) => {
   const orderId = crypto.randomUUID();
 
   try {
-    const jobId = await startGeneration({ nomeDestinatario, relacao, memoria, genero });
+    const jobId = await startGeneration({ nomeDestinatario, relacao, memoria, genero, voz });
 
     // Salva estado pendente com jobId
     global.pendingOrders.set(orderId, {
       orderId,
       jobId,
-      formData: { nomeDestinatario, relacao, memoria, genero },
+      formData: { nomeDestinatario, relacao, memoria, genero, voz },
       status: 'generating_preview',
       createdAt: new Date(),
     });
@@ -118,6 +118,7 @@ router.post('/generate-full', async (req, res) => {
   // Email: prioriza o do webhook Ticto (comprador); fallback para formulário
   const { emailEntrega: emailFromWebhook } = req.body;
   const emailForDelivery = emailFromWebhook || order.formData?.emailEntrega;
+  if (emailForDelivery) order.emailEntrega = emailForDelivery; // persiste para delivery-status
 
   try {
     if (productType === 'video') {

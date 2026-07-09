@@ -19,14 +19,14 @@
   --radius-sm: 10px;
 }
 
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; overflow-x: hidden; }
 
 body {
   font-family: 'Inter', sans-serif;
   background: var(--dark);
   color: var(--text);
   line-height: 1.6;
-  overflow-x: hidden;
+  /* overflow-x: hidden removido do body — no iOS Safari causa trava de scroll */
 }
 
 .container {
@@ -85,7 +85,7 @@ body {
   justify-content: center;
   text-align: center;
   padding: 120px 20px 80px;
-  overflow: hidden;
+  overflow: visible; /* era hidden — causava trava de scroll quando loadingSection crescia */
 }
 
 .hero-bg {

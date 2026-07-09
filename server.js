@@ -21,6 +21,7 @@ const crypto = require('crypto');
 const generateRoutes = require('./routes/generate');
 const webhookRoutes = require('./routes/webhook');
 const downloadRoutes = require('./routes/download');
+const deliveryRoutes = require('./routes/delivery');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -85,6 +86,12 @@ app.get('/api/config', (req, res) => {
 app.use('/api', generateRoutes);
 app.use('/api/webhook', webhookRoutes);
 app.use('/api', downloadRoutes);
+app.use('/api', deliveryRoutes);
+
+// ─── Página de obrigado ───
+app.get('/obrigado', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'obrigado.html'));
+});
 
 // ─── SPA fallback ───
 app.get('*', (req, res) => {

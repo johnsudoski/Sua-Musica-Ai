@@ -25,7 +25,7 @@ const GENRE_INSTRUCTIONS = {
   pop: 'estilo pop brasileiro moderno, produção contemporânea, melodia grudenta e refrão forte',
   mpb: 'estilo MPB (Música Popular Brasileira), arranjo sofisticado com piano e violão, poesia na letra',
   romantico: 'balada romântica, piano suave, cordas de orquestra, voz emocionante e refrão marcante',
-  pagode: 'estilo pagode romântico brasileiro, cavaquinho, tamborim, voz masculina suave e envolvente',
+  pagode: 'estilo pagode romântico brasileiro, cavaquinho, tamborim, suave e envolvente',
   gospel: 'estilo gospel cristão contemporâneo brasileiro, piano, coro de louvor, letra de gratidão e amor',
 };
 
@@ -43,14 +43,15 @@ const RELACAO_MAP = {
 /**
  * Constrói o prompt criativo para o Suno (limite ~500 chars para evitar erro 400)
  */
-function buildPrompt({ nomeDestinatario, relacao, memoria, genero }) {
+function buildPrompt({ nomeDestinatario, relacao, memoria, genero, voz }) {
   const relacaoTexto = RELACAO_MAP[relacao] || relacao;
   const estiloMusical = GENRE_INSTRUCTIONS[genero] || GENRE_INSTRUCTIONS.romantico;
+  const vozTexto = voz === 'masculino' ? 'voz masculina' : 'voz feminina';
 
   // Trunca a memória para garantir que o prompt total fique abaixo de 500 chars
   const memoriaCorta = memoria.length > 150 ? memoria.slice(0, 147) + '...' : memoria;
 
-  return `Musica romantica em portugues do Brasil, ${estiloMusical}. Dedicada para ${nomeDestinatario}, meu(minha) ${relacaoTexto}. Memória especial: "${memoriaCorta}". Letra em PT-BR, citar o nome ${nomeDestinatario}, refrao marcante e emocionante.`;
+  return `Musica romantica em portugues do Brasil, ${estiloMusical}, ${vozTexto}. Dedicada para ${nomeDestinatario}, meu(minha) ${relacaoTexto}. Memória especial: "${memoriaCorta}". Letra em PT-BR, citar o nome ${nomeDestinatario}, refrao marcante e emocionante.`;
 }
 
 function sleep(ms) {
