@@ -10,6 +10,21 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+  <!-- Meta Pixel -->
+  <script>
+  !function(f,b,e,v,n,t,s)
+  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+  n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];
+  s.parentNode.insertBefore(t,s)}(window,document,'script',
+  'https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init','1333066069024820');
+  fbq('track','PageView');
+  </script>
+  <noscript><img height="1" width="1" style="display:none"
+  src="https://www.facebook.com/tr?id=1333066069024820&ev=PageView&noscript=1"/></noscript>
   <style>
     /* ─── TOP BAR — fixo acima do nav ─── */
     .top-announcement {
@@ -518,51 +533,21 @@
         <div class="example-badge">Sertanejo romântico</div>
         <h3>🤠 "Dois Anos Com Você"</h3>
         <p>"Para o Pedro, que me conquista todo dia com sua paciência e dedicação..."</p>
-        <div class="fake-player">
-          <div class="play-btn-small">▶</div>
-          <div class="waveform">
-            <div class="wave-bar" style="height:60%"></div><div class="wave-bar" style="height:80%"></div>
-            <div class="wave-bar" style="height:50%"></div><div class="wave-bar" style="height:90%"></div>
-            <div class="wave-bar" style="height:70%"></div><div class="wave-bar" style="height:40%"></div>
-            <div class="wave-bar" style="height:85%"></div><div class="wave-bar" style="height:65%"></div>
-            <div class="wave-bar" style="height:75%"></div><div class="wave-bar" style="height:55%"></div>
-          </div>
-          <span class="duration">preview</span>
-        </div>
+        <audio controls src="/audio/pedro.mp3" style="width:100%;margin-top:10px;border-radius:8px;"></audio>
         <p style="font-size:12px;color:#f9a8d4;margin-top:12px;">💬 "Quando ouviu o nome dele na música ele travou de emoção" — Camila, SP</p>
       </div>
       <div class="example-card">
         <div class="example-badge">MPB</div>
         <h3>🌸 "Obrigada, Mãe"</h3>
         <p>"Minha mãe Tereza que acordava cedo todo dia pra me levar na escola..."</p>
-        <div class="fake-player">
-          <div class="play-btn-small">▶</div>
-          <div class="waveform">
-            <div class="wave-bar" style="height:40%"></div><div class="wave-bar" style="height:70%"></div>
-            <div class="wave-bar" style="height:90%"></div><div class="wave-bar" style="height:60%"></div>
-            <div class="wave-bar" style="height:80%"></div><div class="wave-bar" style="height:50%"></div>
-            <div class="wave-bar" style="height:75%"></div><div class="wave-bar" style="height:85%"></div>
-            <div class="wave-bar" style="height:45%"></div><div class="wave-bar" style="height:65%"></div>
-          </div>
-          <span class="duration">preview</span>
-        </div>
+        <audio controls src="/audio/tereza.mp3" style="width:100%;margin-top:10px;border-radius:8px;"></audio>
         <p style="font-size:12px;color:#f9a8d4;margin-top:12px;">💬 "Minha mãe usou como toque do celular e mostra pra todo mundo" — Rafael, MG</p>
       </div>
       <div class="example-card">
         <div class="example-badge">Pop</div>
         <h3>🤝 "Amizade Pra Vida"</h3>
         <p>"Minha melhor amiga Júlia, 15 anos de amizade, sempre do meu lado..."</p>
-        <div class="fake-player">
-          <div class="play-btn-small">▶</div>
-          <div class="waveform">
-            <div class="wave-bar" style="height:75%"></div><div class="wave-bar" style="height:45%"></div>
-            <div class="wave-bar" style="height:85%"></div><div class="wave-bar" style="height:55%"></div>
-            <div class="wave-bar" style="height:70%"></div><div class="wave-bar" style="height:90%"></div>
-            <div class="wave-bar" style="height:60%"></div><div class="wave-bar" style="height:40%"></div>
-            <div class="wave-bar" style="height:80%"></div><div class="wave-bar" style="height:65%"></div>
-          </div>
-          <span class="duration">preview</span>
-        </div>
+        <audio controls src="/audio/julia.mp3" style="width:100%;margin-top:10px;border-radius:8px;"></audio>
         <p style="font-size:12px;color:#f9a8d4;margin-top:12px;">💬 "Postou no stories, bombou nos direct e todo mundo quis saber como fiz" — Gustavo, PR</p>
       </div>
     </div>
@@ -724,8 +709,8 @@
                 <span style="font-size:12px;font-weight:400;opacity:0.85;">3–4 min · R$19,90</span>
               </button>
               <button type="button" id="buyBtnVideo" class="btn-buy-video">
-                🎬 MP3 + Vídeo com Letra<br>
-                <span style="font-size:12px;font-weight:400;opacity:0.85;">MP4 animado · R$39,90</span>
+                🎶 Pacote 3 Músicas<br>
+                <span style="font-size:12px;font-weight:400;opacity:0.85;">3 versões únicas · R$39,90</span>
               </button>
             </div>
             <p class="preview-note">PIX ou cartão · Entrega no email · Aprovação em minutos</p>
@@ -823,30 +808,16 @@
       </div>
 
       <div class="price-card popular">
-        <div class="popular-badge">🔥 Mais impactante</div>
-        <h3>MP3 + Vídeo com Letra</h3>
-        <div class="price">R$39<span class="cents">,90</span></div>
-        <div class="price-old">R$19,90 + R$29,90</div>
-        <ul>
-          <li>✓ MP3 completo (3–4 min)</li>
-          <li>✓ <strong>Vídeo MP4 com letra animada</strong></li>
-          <li>✓ Perfeito para Stories e TikTok</li>
-          <li>✓ Entrega do MP3 em minutos</li>
-          <li>✓ Vídeo em até 12 horas</li>
-          <li>✓ <strong>Economiza R$9,90</strong></li>
-        </ul>
-        <a href="#criar" class="btn-price">Criar e ouvir grátis</a>
-      </div>
-
-      <div class="price-card">
-        <h3>MP3 · 3 Músicas</h3>
+        <div class="popular-badge">🔥 Mais popular</div>
+        <h3>Pacote 3 Músicas</h3>
         <div class="price">R$39<span class="cents">,90</span></div>
         <div class="price-old">de R$59,70</div>
         <ul>
-          <li>✓ 3 MP3 completos</li>
-          <li>✓ 3 histórias diferentes</li>
-          <li>✓ Estilos musicais diferentes</li>
-          <li>✓ Ideal para família inteira</li>
+          <li>✓ <strong>3 versões únicas</strong> da sua música</li>
+          <li>✓ Cada uma com melodia diferente</li>
+          <li>✓ Escolha a mais emocionante</li>
+          <li>✓ 3 arquivos MP3 completos (3–4 min)</li>
+          <li>✓ Entrega no email em até 10 min</li>
           <li>✓ <strong>Economiza R$19,80</strong></li>
         </ul>
         <a href="#criar" class="btn-price">Criar e ouvir grátis</a>
@@ -874,8 +845,8 @@
         <div class="faq-a">É 100% grátis. Você não precisa colocar cartão nem cadastrar. Preencheu o formulário → a IA compõe → você ouve os primeiros 30 segundos de graça. Só depois de ouvir você decide se quer comprar.</div>
       </div>
       <div class="faq-item">
-        <button class="faq-q">Qual a diferença do MP3 para o Vídeo com Letra? <span>+</span></button>
-        <div class="faq-a">O MP3 é o áudio completo (3–4 minutos). O Vídeo com Letra inclui o MP3 + um vídeo MP4 com a letra da música aparecendo animada, sincronizada com a música — perfeito para mandar no WhatsApp, Stories do Instagram ou TikTok.</div>
+        <button class="faq-q">Qual a diferença do MP3 para o Pacote 3 Músicas? <span>+</span></button>
+        <div class="faq-a">O MP3 Completo (R$19,90) é uma música única no estilo que você escolheu. O Pacote 3 Músicas (R$39,90) gera 3 versões diferentes da mesma história — cada uma com melodia e arranjo únicos. Você escolhe a que mais emocionou e pode até mandar as 3!</div>
       </div>
       <div class="faq-item">
         <button class="faq-q">A letra vai ter o nome dela de verdade? <span>+</span></button>
@@ -883,7 +854,7 @@
       </div>
       <div class="faq-item">
         <button class="faq-q">Como recebo após o pagamento? <span>+</span></button>
-        <div class="faq-a">Automaticamente. O MP3 chega no email em até 3 minutos após o pagamento — a música já foi gerada com o preview, basta o pagamento confirmar. O Vídeo com Letra chega em até 12 horas. PIX aprova na hora, cartão em até 1 minuto.</div>
+        <div class="faq-a">Automaticamente. O MP3 chega no email em até 5 minutos após o pagamento. O Pacote 3 Músicas chega em até 10 minutos — são 3 músicas geradas na hora. PIX aprova na hora, cartão em até 1 minuto.</div>
       </div>
       <div class="faq-item">
         <button class="faq-q">Posso dar a música de presente sem ela saber como foi feita? <span>+</span></button>

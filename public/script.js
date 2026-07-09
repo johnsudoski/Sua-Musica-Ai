@@ -89,6 +89,8 @@ function startPolling(jobId, nome) {
           _pollDone = true;
           stopLoadTimer();
           _orderId = data.orderId || _orderId;
+          // Pixel: Lead — preview gerado com sucesso
+          if (typeof fbq !== 'undefined') fbq('track', 'Lead');
           showPreview(data.previewUrl, nome);
 
         } else if (data.status === 'error') {
@@ -117,7 +119,12 @@ function showPreview(url, nome) {
   if (loadingSection) loadingSection.classList.add('hidden');
   if (previewSection) {
     previewSection.classList.remove('hidden');
-    previewSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Scroll suave sem travar: usa requestAnimationFrame para não bloquear
+    requestAnimationFrame(function() {
+      var rect = previewSection.getBoundingClientRect();
+      var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      window.scrollTo({ top: scrollTop + rect.top - 80, behavior: 'smooth' });
+    });
   }
   if (generateBtn) {
     generateBtn.disabled  = false;
@@ -158,7 +165,11 @@ function showPost30(nome) {
   var nomeEl = document.getElementById('post30Nome');
   if (nomeEl && nome) nomeEl.textContent = nome;
   post30.style.display = 'block';
-  post30.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  requestAnimationFrame(function() {
+    var rect = post30.getBoundingClientRect();
+    var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    window.scrollTo({ top: scrollTop + rect.top - 80, behavior: 'smooth' });
+  });
 }
 
 // ─── Resetar UI após erro ───
@@ -265,10 +276,23 @@ function openCheckout(productType) {
   sessionStorage.setItem('sua_musica_product', productType);
 
   var checkoutUrls = {
-    mp3:   window._checkoutUrlMp3   || window._checkoutUrl || 'https://checkout.ticto.app/OD11F0BEB',
+    mp3:   window._checkoutUrlMp3   || 'https://checkout.ticto.app/OD11F0BEB',
     video: window._checkoutUrlVideo || 'https://checkout.ticto.app/OD8AA1433',
+    pack3: window._checkoutUrlVideo || 'https://checkout.ticto.app/OD8AA1433',
   };
   var baseUrl = checkoutUrls[productType] || checkoutUrls.mp3;
+
+  // Pixel: InitiateCheckout
+  if (typeof fbq !== 'undefined') {
+    var isPackage = (productType === 'video' || productType === 'pack3');
+    fbq('track', 'InitiateCheckout', {
+      value:        isPackage ? 39.90 : 19.90,
+      currency:     'BRL',
+      content_name: isPackage ? 'Pacote 3 Músicas' : 'MP3 Completo',
+      content_ids:  [productType],
+      num_items:    isPackage ? 3 : 1,
+    });
+  }
 
   try {
     var url = new URL(baseUrl);
@@ -307,7 +331,6 @@ checkFloat();
 fetch(API_BASE + '/api/config')
   .then(function(r) { return r.json(); })
   .then(function(cfg) {
-    if (cfg.checkoutUrl)      window._checkoutUrl      = cfg.checkoutUrl;
     if (cfg.checkoutUrlMp3)   window._checkoutUrlMp3   = cfg.checkoutUrlMp3;
     if (cfg.checkoutUrlVideo) window._checkoutUrlVideo = cfg.checkoutUrlVideo;
   })

@@ -100,7 +100,7 @@ router.get('/preview-status/:jobId', async (req, res) => {
 
 // ─── POST /api/generate-full (chamado após webhook de pagamento confirmado) ───
 router.post('/generate-full', async (req, res) => {
-  const { orderId } = req.body;
+  const { orderId, productType = 'mp3' } = req.body;
 
   const order = global.pendingOrders.get(orderId);
   if (!order) {
@@ -113,34 +113,74 @@ router.post('/generate-full', async (req, res) => {
 
   order.status = 'generating_full';
 
+  // Email: prioriza o do webhook Ticto (comprador); fallback para formulário
+  const { emailEntrega: emailFromWebhook } = req.body;
+  const emailForDelivery = emailFromWebhook || order.formData?.emailEntrega;
+
   try {
-    const { audioUrl } = await generateFull(order.formData);
+    if (productType === '3musicas') {
+      // ── PACOTE 3 MÚSICAS: gera 3 músicas em paralelo ──
+      console.log(`[generate-full] Gerando PACOTE 3 MÚSICAS para ${orderId}`);
 
-    const token = crypto.randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
+      const [r1, r2, r3] = await Promise.all([
+        generateFull(order.formData),
+        generateFull(order.formData),
+        generateFull(order.formData),
+      ]);
 
-    global.downloadTokens.set(token, { orderId, audioUrl, expiresAt });
-
-    order.status = 'complete';
-    order.downloadToken = token;
-    order.fullAudioUrl = audioUrl;
-
-    // Email: prioriza o do webhook Ticto (comprador); fallback para formulário (legado)
-    const { emailEntrega: emailFromWebhook } = req.body;
-    const emailForDelivery = emailFromWebhook || order.formData?.emailEntrega;
-
-    if (emailForDelivery) {
-      await emailService.sendDownloadEmail({
-        to: emailForDelivery,
-        nomeDestinatario: order.formData.nomeDestinatario,
-        downloadUrl: `${process.env.APP_URL}/api/download/${token}`,
-        audioUrl,
+      // Cria 3 tokens de download (48h)
+      const tokens = [r1, r2, r3].map(({ audioUrl }) => {
+        const token = crypto.randomBytes(32).toString('hex');
+        const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
+        global.downloadTokens.set(token, { orderId, audioUrl, expiresAt });
+        return { token, audioUrl };
       });
-    } else {
-      console.warn(`generate-full: orderId ${orderId} sem email para entrega — pulando envio`);
-    }
 
-    return res.json({ success: true, downloadToken: token, message: 'Música completa gerada e email enviado!' });
+      order.status       = 'complete';
+      order.downloadToken = tokens[0].token; // token principal (compatibilidade)
+      order.pack3Tokens   = tokens.map(t => t.token);
+      order.fullAudioUrl  = tokens[0].audioUrl;
+
+      if (emailForDelivery) {
+        const downloadUrls = tokens.map(
+          t => `${process.env.APP_URL}/api/download/${t.token}`
+        );
+        await emailService.sendPack3Email({
+          to: emailForDelivery,
+          nomeDestinatario: order.formData.nomeDestinatario,
+          downloadUrls,
+        });
+      } else {
+        console.warn(`generate-full [3musicas]: sem email para ${orderId}`);
+      }
+
+      return res.json({ success: true, downloadTokens: tokens.map(t => t.token), message: 'Pacote 3 músicas gerado e email enviado!' });
+
+    } else {
+      // ── MP3 SIMPLES: gera 1 música ──
+      const { audioUrl } = await generateFull(order.formData);
+
+      const token = crypto.randomBytes(32).toString('hex');
+      const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
+      global.downloadTokens.set(token, { orderId, audioUrl, expiresAt });
+
+      order.status        = 'complete';
+      order.downloadToken = token;
+      order.fullAudioUrl  = audioUrl;
+
+      if (emailForDelivery) {
+        await emailService.sendDownloadEmail({
+          to: emailForDelivery,
+          nomeDestinatario: order.formData.nomeDestinatario,
+          downloadUrl: `${process.env.APP_URL}/api/download/${token}`,
+          audioUrl,
+        });
+      } else {
+        console.warn(`generate-full: orderId ${orderId} sem email para entrega — pulando envio`);
+      }
+
+      return res.json({ success: true, downloadToken: token, message: 'Música completa gerada e email enviado!' });
+    }
 
   } catch (err) {
     console.error('Erro ao gerar música completa:', err.message);

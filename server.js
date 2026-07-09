@@ -77,9 +77,8 @@ app.get('/api/test-email', async (req, res) => {
 
 app.get('/api/config', (req, res) => {
   res.json({
-    checkoutUrl: process.env.KIWIFY_CHECKOUT_URL || '',
-    checkoutUrl3: process.env.KIWIFY_CHECKOUT_URL_3 || '',
-    checkoutUrl5: process.env.KIWIFY_CHECKOUT_URL_5 || '',
+    checkoutUrlMp3:   process.env.TICTO_CHECKOUT_MP3   || 'https://checkout.ticto.app/OD11F0BEB',
+    checkoutUrlVideo: process.env.TICTO_CHECKOUT_VIDEO || 'https://checkout.ticto.app/OD8AA1433',
   });
 });
 

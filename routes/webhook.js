@@ -10,6 +10,17 @@ const axios = require('axios');
 
 const router = express.Router();
 
+// ─── Detecta qual produto foi comprado pelo payload Ticto ───
+function detectProductType(payload) {
+  const offerId = payload?.sale?.offer_id || payload?.order?.offer_id || payload?.offer_id || '';
+  const price   = payload?.sale?.price    || payload?.order?.price    || payload?.price    || 0;
+  const pack3Id = process.env.TICTO_VIDEO_PRODUCT || 'OD8AA1433';
+
+  if (offerId === pack3Id) return '3musicas';
+  if (Number(price) >= 3000) return '3musicas'; // R$30+ = pacote 3 músicas
+  return 'mp3';
+}
+
 // ─── POST /api/webhook/kiwify ───
 router.post('/kiwify', async (req, res) => {
   const secret = process.env.KIWIFY_WEBHOOK_SECRET;
@@ -95,17 +106,18 @@ router.post('/ticto', async (req, res) => {
     return res.json({ received: true, action: 'ignored', status });
   }
 
-  const email = payload?.customer?.email;
-  const orderId = payload?.utm_campaign || payload?.sale?.utm_campaign || payload?.order?.utm_campaign;
+  const email       = payload?.customer?.email;
+  const orderId     = payload?.utm_campaign || payload?.sale?.utm_campaign || payload?.order?.utm_campaign;
+  const productType = detectProductType(payload);
 
-  console.log(`Ticto webhook: PAGO | email=${email} | orderId=${orderId}`);
+  console.log(`Ticto webhook: PAGO | email=${email} | orderId=${orderId} | produto=${productType}`);
 
   if (orderId) {
-    triggerFullGeneration(orderId, email); // passa email do comprador (Ticto)
+    triggerFullGeneration(orderId, email, productType);
   } else if (email) {
     const found = findOrderByEmail(email);
     if (found) {
-      triggerFullGeneration(found.orderId, email);
+      triggerFullGeneration(found.orderId, email, productType);
     } else {
       console.warn('Ticto webhook: pedido não encontrado para email', email);
     }
@@ -125,10 +137,10 @@ function findOrderByEmail(email) {
   return null;
 }
 
-function triggerFullGeneration(orderId, emailEntrega) {
+function triggerFullGeneration(orderId, emailEntrega, productType = 'mp3') {
   // Chama assincronamente (não bloqueia resposta do webhook)
-  axios.post(`${process.env.APP_URL || 'http://localhost:3000'}/api/generate-full`, { orderId, emailEntrega })
-    .then(r => console.log(`Geração completa iniciada para ${orderId}:`, r.data.message))
+  axios.post(`${process.env.APP_URL || 'http://localhost:3000'}/api/generate-full`, { orderId, emailEntrega, productType })
+    .then(r => console.log(`Geração completa iniciada para ${orderId} [${productType}]:`, r.data.message))
     .catch(e => console.error(`Erro ao iniciar geração completa para ${orderId}:`, e.message));
 }
 
