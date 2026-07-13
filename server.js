@@ -22,6 +22,8 @@ const generateRoutes = require('./routes/generate');
 const webhookRoutes = require('./routes/webhook');
 const downloadRoutes = require('./routes/download');
 const deliveryRoutes = require('./routes/delivery');
+const creditsRoutes = require('./routes/credits');
+const db = require('./services/db');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -80,6 +82,9 @@ app.get('/api/config', (req, res) => {
   res.json({
     checkoutUrlMp3:   process.env.TICTO_CHECKOUT_MP3   || 'https://checkout.ticto.app/OD11F0BEB',
     checkoutUrlVideo: process.env.TICTO_CHECKOUT_VIDEO || 'https://checkout.ticto.app/OD8AA1433',
+    checkoutUrlPack3: process.env.TICTO_CHECKOUT_PACK3 || 'https://checkout.ticto.app/O2B7D2FC2',
+    videoServiceUrl:   process.env.VIDEO_SERVICE_URL   || '',
+    creditsServiceUrl: process.env.CREDITS_SERVICE_URL || '',
   });
 });
 
@@ -87,6 +92,7 @@ app.use('/api', generateRoutes);
 app.use('/api/webhook', webhookRoutes);
 app.use('/api', downloadRoutes);
 app.use('/api', deliveryRoutes);
+app.use('/api/credits', creditsRoutes);
 
 // ─── Página de obrigado ───
 app.get('/obrigado', (req, res) => {
@@ -105,6 +111,10 @@ app.use((err, req, res, _next) => {
 });
 
 // ─── Start ───
+db.initSchema()
+  .then(() => console.log('   Postgres: ✓ schema pronto'))
+  .catch(err => console.error('   Postgres: ✗ erro ao iniciar schema:', err.message));
+
 app.listen(PORT, () => {
   console.log(`\n🎵 SuaMúsicaAI rodando em http://localhost:${PORT}`);
   console.log(`   Ambiente: ${process.env.NODE_ENV || 'development'}`);

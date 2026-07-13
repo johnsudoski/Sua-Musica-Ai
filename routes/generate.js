@@ -8,7 +8,6 @@ const path = require('path');
 const fs = require('fs');
 const { startGeneration, checkJobStatus, generateFull } = require('../services/suno');
 const emailService = require('../services/email');
-const { generateVideo } = require('../services/video');
 const { trimToFile } = require('../services/trim');
 
 const router = express.Router();
@@ -133,9 +132,12 @@ router.get('/preview-audio/:orderId', (req, res) => {
   fs.createReadStream(order.previewFilePath).pipe(res);
 });
 
-// ─── POST /api/generate-full (chamado após webhook de pagamento confirmado) ───
+// ─── POST /api/generate-full (chamado após webhook de pagamento confirmado do MP3) ───
+// Nota: a compra do produto "Vídeo com Homenagem" NÃO passa mais por aqui --
+// é tratada por handleVideoPurchase() em routes/webhook.js, que gera a música
+// e entrega os dados pro serviço separado "Vídeo Homenagem" montar o vídeo real.
 router.post('/generate-full', async (req, res) => {
-  const { orderId, productType = 'mp3' } = req.body;
+  const { orderId } = req.body;
 
   const order = global.pendingOrders.get(orderId);
   if (!order) {
@@ -154,72 +156,28 @@ router.post('/generate-full', async (req, res) => {
   if (emailForDelivery) order.emailEntrega = emailForDelivery; // persiste para delivery-status
 
   try {
-    if (productType === 'video') {
-      // ── VÍDEO COM LETRA: gera música full + vídeo animado Creatomate ──
-      console.log(`[generate-full] Gerando MP3 + VÍDEO para ${orderId}`);
+    const { audioUrl } = await generateFull(order.formData);
 
-      const { audioUrl, lyrics: newLyrics } = await generateFull(order.formData);
-      const lyrics = order.lyrics || newLyrics; // prefere letra capturada no preview
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
+    global.downloadTokens.set(token, { orderId, audioUrl, expiresAt });
 
-      console.log(`[generate-full] Gerando vídeo com Creatomate para ${orderId}...`);
-      const { videoUrl } = await generateVideo({
-        audioUrl,
+    order.status        = 'complete';
+    order.downloadToken = token;
+    order.fullAudioUrl  = audioUrl;
+
+    if (emailForDelivery) {
+      await emailService.sendDownloadEmail({
+        to: emailForDelivery,
         nomeDestinatario: order.formData.nomeDestinatario,
-        lyrics,
+        downloadUrl: `${process.env.APP_URL}/api/download/${token}`,
+        audioUrl,
       });
-
-      const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
-
-      const mp3Token = crypto.randomBytes(32).toString('hex');
-      global.downloadTokens.set(mp3Token, { orderId, audioUrl, expiresAt });
-
-      const videoToken = crypto.randomBytes(32).toString('hex');
-      global.downloadTokens.set(videoToken, { orderId, videoUrl, expiresAt, isVideo: true });
-
-      order.status        = 'complete';
-      order.downloadToken = mp3Token;
-      order.videoToken    = videoToken;
-      order.fullAudioUrl  = audioUrl;
-      order.fullVideoUrl  = videoUrl;
-
-      if (emailForDelivery) {
-        await emailService.sendVideoEmail({
-          to: emailForDelivery,
-          nomeDestinatario: order.formData.nomeDestinatario,
-          mp3DownloadUrl:   `${process.env.APP_URL}/api/download/${mp3Token}`,
-          videoDownloadUrl: `${process.env.APP_URL}/api/download/${videoToken}`,
-        });
-      } else {
-        console.warn(`generate-full [video]: sem email para ${orderId}`);
-      }
-
-      return res.json({ success: true, downloadToken: mp3Token, videoToken, message: 'MP3 + vídeo gerados e email enviado!' });
-
     } else {
-      // ── MP3 SIMPLES: gera 1 música ──
-      const { audioUrl } = await generateFull(order.formData);
-
-      const token = crypto.randomBytes(32).toString('hex');
-      const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
-      global.downloadTokens.set(token, { orderId, audioUrl, expiresAt });
-
-      order.status        = 'complete';
-      order.downloadToken = token;
-      order.fullAudioUrl  = audioUrl;
-
-      if (emailForDelivery) {
-        await emailService.sendDownloadEmail({
-          to: emailForDelivery,
-          nomeDestinatario: order.formData.nomeDestinatario,
-          downloadUrl: `${process.env.APP_URL}/api/download/${token}`,
-          audioUrl,
-        });
-      } else {
-        console.warn(`generate-full: orderId ${orderId} sem email para entrega — pulando envio`);
-      }
-
-      return res.json({ success: true, downloadToken: token, message: 'Música completa gerada e email enviado!' });
+      console.warn(`generate-full: orderId ${orderId} sem email para entrega — pulando envio`);
     }
+
+    return res.json({ success: true, downloadToken: token, message: 'Música completa gerada e email enviado!' });
 
   } catch (err) {
     console.error('Erro ao gerar música completa:', err.message);

@@ -340,4 +340,90 @@ async function sendVideoEmail({ to, nomeDestinatario, mp3DownloadUrl, videoDownl
   return { messageId: 'no-config', to };
 }
 
-module.exports = { sendDownloadEmail, sendPack3Email, sendVideoEmail };
+// ── Template: Créditos liberados (Pacote 3 Músicas) ──
+function buildCreditsHtml({ balance, creditsUrl }) {
+  return `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seus créditos estão liberados! 🎵</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0D0D1A; color: #fff; margin: 0; padding: 20px; }
+    .container { max-width: 580px; margin: 0 auto; background: #161628; border-radius: 16px; overflow: hidden; }
+    .header { background: linear-gradient(135deg, #E91E8C, #7B2FBE); padding: 40px 30px; text-align: center; }
+    .header h1 { margin: 0; font-size: 28px; color: #fff; }
+    .header p { margin: 8px 0 0; color: rgba(255,255,255,0.85); font-size: 16px; }
+    .body { padding: 32px 30px; }
+    .body p { color: #ccc; line-height: 1.6; margin: 0 0 16px; }
+    .balance { color: #E91E8C; font-weight: bold; font-size: 22px; }
+    .btn { display: block; background: linear-gradient(135deg, #E91E8C, #7B2FBE); color: #fff !important; text-decoration: none; text-align: center; padding: 16px 32px; border-radius: 50px; font-size: 18px; font-weight: bold; margin: 24px 0; }
+    .note { font-size: 13px; color: #888; }
+    .footer { padding: 24px 30px; border-top: 1px solid #2a2a45; text-align: center; }
+    .footer p { color: #555; font-size: 13px; margin: 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎵 SuaMúsicaAI</h1>
+      <p>Seu Pacote 3 Músicas está liberado!</p>
+    </div>
+    <div class="body">
+      <p>Olá! 💕</p>
+      <p>
+        Sua compra foi confirmada. Você tem <span class="balance">${balance} música${balance === 1 ? '' : 's'}</span>
+        disponíve${balance === 1 ? 'l' : 'is'} para criar quando quiser, uma de cada vez.
+      </p>
+      <a href="${creditsUrl}" class="btn">🎶 Criar minha música agora</a>
+      <p class="note">
+        Use o mesmo email desta compra na página acima para acessar seus créditos.
+      </p>
+      <p>Com carinho,<br><strong>Equipe SuaMúsicaAI</strong></p>
+    </div>
+    <div class="footer">
+      <p>SuaMúsicaAI • O presente mais emocionante do Brasil 🇧🇷</p>
+    </div>
+  </div>
+</body>
+</html>`.trim();
+}
+
+/**
+ * Envia email avisando que os créditos do Pacote 3 Músicas foram liberados.
+ */
+async function sendCreditsEmail({ to, balance, creditsUrl }) {
+  const from    = process.env.EMAIL_FROM || 'SuaMúsicaAI <onboarding@resend.dev>';
+  const subject = `🎵 Seus ${balance} créditos de música estão liberados!`;
+  const html    = buildCreditsHtml({ balance, creditsUrl });
+  const text    = `Sua compra foi confirmada! Você tem ${balance} música(s) disponível(is).\n\nCrie agora: ${creditsUrl}\n\nUse o mesmo email desta compra.\n\nEquipe SuaMúsicaAI`;
+
+  if (process.env.RESEND_API_KEY) {
+    console.log(`[email] Enviando aviso de créditos via Resend para ${to}`);
+    const info = await sendViaResend({ to, from, subject, html, text });
+    console.log(`[email] Resend OK: ${info.id}`);
+    return info;
+  }
+
+  if (process.env.SMTP_HOST) {
+    console.log(`[email] Enviando aviso de créditos via SMTP para ${to}`);
+    const info = await sendViaSmtp({ to, from, subject, html, text });
+    console.log(`[email] SMTP OK: ${info.messageId}`);
+    return info;
+  }
+
+  if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
+    console.log(`[email] Enviando aviso de créditos via Gmail para ${to}`);
+    const info = await sendViaGmail({ to, from, subject, html, text });
+    console.log(`[email] Gmail OK: ${info.messageId}`);
+    return info;
+  }
+
+  console.log('\n====== [EMAIL CREDITOS - SEM CONFIG] ======');
+  console.log('Para:', to, '| Saldo:', balance, '| URL:', creditsUrl);
+  console.log('==========================================\n');
+  return { messageId: 'no-config', to };
+}
+
+module.exports = { sendDownloadEmail, sendPack3Email, sendVideoEmail, sendCreditsEmail };

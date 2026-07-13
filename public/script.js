@@ -293,7 +293,7 @@ function openCheckout(productType) {
   var checkoutUrls = {
     mp3:   window._checkoutUrlMp3   || 'https://checkout.ticto.app/OD11F0BEB',
     video: window._checkoutUrlVideo || 'https://checkout.ticto.app/OD8AA1433',
-    pack3: window._checkoutUrlVideo || 'https://checkout.ticto.app/OD8AA1433',
+    pack3: window._checkoutUrlPack3 || 'https://checkout.ticto.app/O2B7D2FC2',
   };
   var baseUrl = checkoutUrls[productType] || checkoutUrls.mp3;
 
@@ -319,8 +319,36 @@ function openCheckout(productType) {
   }
 }
 
-if (buyBtnMp3)   buyBtnMp3.addEventListener('click',   function() { openCheckout('mp3');   });
-if (buyBtnVideo) buyBtnVideo.addEventListener('click',  function() { openCheckout('video'); });
+if (buyBtnMp3) buyBtnMp3.addEventListener('click', function() { openCheckout('mp3'); });
+
+// ─── Vídeo com Homenagem: antes do checkout, coleta briefing + upload numa página separada ───
+if (buyBtnVideo) buyBtnVideo.addEventListener('click', function() {
+  if (!window._videoServiceUrl) {
+    // Serviço de vídeo ainda não configurado -- cai no checkout direto (comportamento antigo)
+    openCheckout('video');
+    return;
+  }
+
+  var nome    = (document.getElementById('nomeDestinatario') || {value:''}).value;
+  var relacao = (document.getElementById('relacao') || {value:''}).value;
+  var memoria = (document.getElementById('memoria') || {value:''}).value;
+  var gEl     = document.querySelector('input[name="genero"]:checked');
+  var genero  = gEl ? gEl.value : '';
+  var vozEl   = document.querySelector('input[name="voz"]:checked');
+  var voz     = vozEl ? vozEl.value : 'feminino';
+  var email   = (document.getElementById('emailEntrega') || {value:''}).value;
+
+  if (typeof fbq !== 'undefined') {
+    fbq('track', 'InitiateCheckout', {
+      value: 29.90, currency: 'BRL', content_name: 'Vídeo com Homenagem', content_ids: ['video'],
+    });
+  }
+
+  var params = new URLSearchParams({
+    nome: nome, relacao: relacao, memoria: memoria, genero: genero, voz: voz, email: email,
+  });
+  window.open(window._videoServiceUrl + '?' + params.toString(), '_blank');
+});
 
 // ─── Links → scroll para formulário ───
 document.querySelectorAll('a[href="#criar"]').forEach(function(link) {
@@ -348,5 +376,7 @@ fetch(API_BASE + '/api/config')
   .then(function(cfg) {
     if (cfg.checkoutUrlMp3)   window._checkoutUrlMp3   = cfg.checkoutUrlMp3;
     if (cfg.checkoutUrlVideo) window._checkoutUrlVideo = cfg.checkoutUrlVideo;
+    if (cfg.checkoutUrlPack3) window._checkoutUrlPack3 = cfg.checkoutUrlPack3;
+    if (cfg.videoServiceUrl)  window._videoServiceUrl  = cfg.videoServiceUrl;
   })
   .catch(function() {});

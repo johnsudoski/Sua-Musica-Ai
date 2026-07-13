@@ -7,17 +7,31 @@
 const express = require('express');
 const crypto = require('crypto');
 const axios = require('axios');
+const db = require('../services/db');
+const { generateFull } = require('../services/suno');
+const emailService = require('../services/email');
 
 const router = express.Router();
+
+// ─── IDs dos produtos (checkouts Ticto) ───
+const PRODUCT_IDS = {
+  mp3:   process.env.TICTO_MP3_PRODUCT   || 'OD11F0BEB',
+  video: process.env.TICTO_VIDEO_PRODUCT || 'OD8AA1433',
+  pack3: process.env.TICTO_PACK3_PRODUCT || 'O2B7D2FC2',
+};
 
 // ─── Detecta qual produto foi comprado pelo payload Ticto ───
 function detectProductType(payload) {
   const offerId = payload?.sale?.offer_id || payload?.order?.offer_id || payload?.offer_id || '';
-  const price   = payload?.sale?.price    || payload?.order?.price    || payload?.price    || 0;
-  const pack3Id = process.env.TICTO_VIDEO_PRODUCT || 'OD8AA1433';
 
-  if (offerId === pack3Id) return 'video';
-  if (Number(price) >= 3000) return 'video'; // R$30+ = MP3 + vídeo com letra
+  if (offerId === PRODUCT_IDS.pack3) return 'pack3';
+  if (offerId === PRODUCT_IDS.video) return 'video';
+  if (offerId === PRODUCT_IDS.mp3)   return 'mp3';
+
+  // Fallback por preço, só quando o offer_id não bate com nenhum conhecido
+  const price = Number(payload?.sale?.price || payload?.order?.price || payload?.price || 0);
+  if (price >= 3500) return 'pack3'; // R$35+
+  if (price >= 2500) return 'video'; // R$25-34
   return 'mp3';
 }
 
@@ -78,7 +92,8 @@ router.post('/kiwify', async (req, res) => {
 });
 
 // ─── POST /api/webhook/ticto ───
-// Ticto envia JSON com UTM params no corpo. Passa orderId via ?utm_campaign=ORDER_ID na URL de checkout.
+// Ticto envia JSON com UTM params no corpo. Passa orderId (ou request_id, no
+// caso do Vídeo Homenagem) via ?utm_campaign=... na URL de checkout.
 router.post('/ticto', async (req, res) => {
   // Validação do token Ticto (enviado no header Authorization: Bearer TOKEN ou x-ticto-token)
   const tictoToken = process.env.TICTO_WEBHOOK_TOKEN;
@@ -107,26 +122,68 @@ router.post('/ticto', async (req, res) => {
   }
 
   const email       = payload?.customer?.email;
-  const orderId     = payload?.utm_campaign || payload?.sale?.utm_campaign || payload?.order?.utm_campaign;
+  const campaignId  = payload?.utm_campaign || payload?.sale?.utm_campaign || payload?.order?.utm_campaign;
   const productType = detectProductType(payload);
 
-  console.log(`Ticto webhook: PAGO | email=${email} | orderId=${orderId} | produto=${productType}`);
+  console.log(`Ticto webhook: PAGO | email=${email} | campaignId=${campaignId} | produto=${productType}`);
 
-  if (orderId) {
-    triggerFullGeneration(orderId, email, productType);
-  } else if (email) {
-    const found = findOrderByEmail(email);
-    if (found) {
-      triggerFullGeneration(found.orderId, email, productType);
+  // Responde rápido pra Ticto; processamento continua em background.
+  res.json({ received: true });
+
+  try {
+    if (productType === 'pack3') {
+      await handlePack3Purchase(email);
+    } else if (productType === 'video') {
+      await handleVideoPurchase(campaignId, email);
+    } else if (campaignId) {
+      triggerFullGeneration(campaignId, email, productType);
+    } else if (email) {
+      const found = findOrderByEmail(email);
+      if (found) {
+        triggerFullGeneration(found.orderId, email, productType);
+      } else {
+        console.warn('Ticto webhook: pedido não encontrado para email', email);
+      }
     } else {
-      console.warn('Ticto webhook: pedido não encontrado para email', email);
+      console.warn('Ticto webhook: sem orderId nem email para identificar pedido', JSON.stringify(payload));
     }
-  } else {
-    console.warn('Ticto webhook: sem orderId nem email para identificar pedido', JSON.stringify(payload));
+  } catch (err) {
+    console.error('Ticto webhook: erro ao processar pagamento:', err.message);
+  }
+});
+
+// ─── Pacote 3 Músicas: concede créditos (a criação acontece na página de créditos) ───
+async function handlePack3Purchase(email) {
+  if (!email) {
+    console.warn('Pack3: sem email no payload — não é possível conceder créditos');
+    return;
+  }
+  const normalized = email.toLowerCase().trim();
+  const balance = await db.grantCredits(normalized, 3);
+  console.log(`Pack3: +3 créditos para ${normalized} (saldo agora: ${balance})`);
+
+  const creditsUrl = process.env.CREDITS_SERVICE_URL || process.env.APP_URL || '';
+  await emailService.sendCreditsEmail({ to: normalized, balance, creditsUrl });
+}
+
+// ─── Vídeo Homenagem: gera a música e marca o pedido como pago; a montagem
+// do vídeo em si é feita pelo serviço separado "Vídeo Homenagem" ───
+async function handleVideoPurchase(requestId, email) {
+  if (!requestId) {
+    console.warn('Vídeo Homenagem: sem request_id (utm_campaign) — não é possível localizar o pedido');
+    return;
+  }
+  const videoRequest = await db.getVideoRequestByRequestId(requestId);
+  if (!videoRequest) {
+    console.warn(`Vídeo Homenagem: request_id ${requestId} não encontrado em video_requests`);
+    return;
   }
 
-  res.json({ received: true });
-});
+  console.log(`Vídeo Homenagem: gerando música para request_id ${requestId}...`);
+  const { audioUrl } = await generateFull(videoRequest.form_data || {});
+  await db.markVideoRequestPaid(requestId, { email, audioUrl });
+  console.log(`Vídeo Homenagem: música pronta para request_id ${requestId} — aguardando montagem do vídeo`);
+}
 
 function findOrderByEmail(email) {
   for (const [, order] of global.pendingOrders) {
