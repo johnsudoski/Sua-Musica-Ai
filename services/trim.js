@@ -3,10 +3,17 @@
  * sem nunca expor ao navegador a URL da música completa.
  */
 
+const { execSync } = require('child_process');
 const ffmpeg = require('fluent-ffmpeg');
-const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 
-ffmpeg.setFfmpegPath(ffmpegPath);
+// Prioriza o ffmpeg do sistema (instalado via nixpacks.toml no Railway — build nativo
+// pro container, sem os SIGSEGV que o binário estático do @ffmpeg-installer costuma dar
+// em alguns ambientes Linux). Só cai pro binário do pacote npm em dev local (ex: Windows).
+try {
+  execSync('ffmpeg -version', { stdio: 'ignore' });
+} catch {
+  ffmpeg.setFfmpegPath(require('@ffmpeg-installer/ffmpeg').path);
+}
 
 /**
  * Baixa `sourceUrl` e grava em `outputPath` já cortado para os primeiros `seconds` segundos.
