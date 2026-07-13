@@ -99,7 +99,7 @@ router.post('/ticto', async (req, res) => {
   }
 
   const status = payload?.sale?.status || payload?.order?.status || payload?.status || '';
-  const isPaid = ['approved', 'paid', 'complete', 'completed'].includes(String(status).toLowerCase());
+  const isPaid = ['approved', 'paid', 'complete', 'completed', 'authorized'].includes(String(status).toLowerCase());
 
   if (!isPaid) {
     console.log(`Ticto webhook: status=${status} — ignorado`);
