@@ -19,6 +19,32 @@ function headers() {
   };
 }
 
+function sleepMs(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+/**
+ * Reexecuta `fn` em caso de falha transiente da apiframe.ai (403/429/5xx ou
+ * timeout/rede) -- evita que um cliente que já pagou fique travado com
+ * "erro, contate o suporte" por causa de uma instabilidade momentânea da API.
+ * Erros 4xx "normais" (400 = requisição inválida) não são reexecutados.
+ */
+async function withRetry(fn, { retries = 3, baseDelayMs = 4000 } = {}) {
+  let lastErr;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      const status = err.response?.status;
+      const retryable = !status || status === 403 || status === 429 || status >= 500;
+      if (!retryable || attempt === retries) throw err;
+      const delay = baseDelayMs * Math.pow(2, attempt);
+      console.warn(`[suno] Tentativa ${attempt + 1}/${retries + 1} falhou (status ${status || 'sem resposta'}) — tentando de novo em ${delay}ms`);
+      await sleepMs(delay);
+    }
+  }
+  throw lastErr;
+}
+
 // Mapa de gêneros musicais → instrução de estilo no prompt
 const GENRE_INSTRUCTIONS = {
   sertanejo: 'estilo sertanejo romântico brasileiro, violão, sanfona, dupla vocal, refrão cantável',
@@ -67,11 +93,11 @@ async function startGeneration(formData) {
     throw new Error('APIFRAME_API_KEY não configurada');
   }
   const prompt = buildPrompt(formData);
-  const initRes = await axios.post(
+  const initRes = await withRetry(() => axios.post(
     `${BASE}/music/generate`,
     { model: 'suno', prompt },
     { headers: headers(), timeout: 15000 }
-  );
+  ));
   const { jobId } = initRes.data;
   if (!jobId) throw new Error('apiframe.ai não retornou jobId');
   console.log(`[suno] Job iniciado: ${jobId}`);
@@ -116,7 +142,15 @@ async function generateMusic(formData, maxSeconds = 360) {
     await sleep(delay);
     delay = Math.min(delay * 1.2, 15000);
 
-    const result = await checkJobStatus(jobId);
+    let result;
+    try {
+      result = await checkJobStatus(jobId);
+    } catch (err) {
+      // Falha transiente de rede/API durante o polling -- não desiste,
+      // só tenta de novo no próximo ciclo (o timeout geral ainda se aplica).
+      console.warn(`[suno] Erro ao consultar status do job ${jobId}, tentando de novo:`, err.message);
+      continue;
+    }
     if (result.status === 'COMPLETED') return { audioUrl: result.audioUrl, lyrics: result.lyrics || null, jobId };
     if (result.status === 'FAILED') throw new Error(`Geração falhou: ${result.error}`);
   }
