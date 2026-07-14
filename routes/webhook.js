@@ -10,6 +10,7 @@ const axios = require('axios');
 const db = require('../services/db');
 const { generateFull } = require('../services/suno');
 const emailService = require('../services/email');
+const { sendPurchaseEvent } = require('../services/metaCapi');
 
 const router = express.Router();
 
@@ -18,6 +19,13 @@ const PRODUCT_IDS = {
   mp3:   process.env.TICTO_MP3_PRODUCT   || 'OD11F0BEB',
   video: process.env.TICTO_VIDEO_PRODUCT || 'OD8AA1433',
   pack3: process.env.TICTO_PACK3_PRODUCT || 'O2B7D2FC2',
+};
+
+// ─── Valores dos produtos (pra reportar ao Meta via Conversions API) ───
+const PRODUCT_VALUES = {
+  mp3:   19.90,
+  video: 29.90,
+  pack3: 39.90,
 };
 
 // ─── Detecta qual produto foi comprado pelo payload Ticto ───
@@ -129,6 +137,14 @@ router.post('/ticto', async (req, res) => {
 
   // Responde rápido pra Ticto; processamento continua em background.
   res.json({ received: true });
+
+  // Reporta a compra real pro Meta via Conversions API (o navegador nunca vê
+  // essa conversão, já que o pagamento acontece na página da Ticto).
+  sendPurchaseEvent({
+    email,
+    value: PRODUCT_VALUES[productType] || PRODUCT_VALUES.mp3,
+    eventId: campaignId ? `${campaignId}-purchase` : undefined,
+  }).catch(() => {}); // sendPurchaseEvent já trata os próprios erros internamente
 
   try {
     if (productType === 'pack3') {
