@@ -9,6 +9,22 @@ const fs = require('fs');
 const { startGeneration, checkJobStatus, generateFull } = require('../services/suno');
 const emailService = require('../services/email');
 const { trimToFile } = require('../services/trim');
+const db = require('../services/db');
+
+// Busca o pedido em memória; se não achar (ex: servidor reiniciou no meio do
+// processamento), tenta recuperar do Postgres antes de desistir.
+async function getOrderResilient(orderId) {
+  let order = global.pendingOrders.get(orderId);
+  if (order) return order;
+
+  const row = await db.getOrder(orderId).catch(() => null);
+  if (!row) return null;
+
+  order = db.orderRowToMemoryFormat(row);
+  global.pendingOrders.set(orderId, order);
+  console.warn(`[orders] Pedido ${orderId} recuperado do Postgres (não estava em memória)`);
+  return order;
+}
 
 const router = express.Router();
 const DOWNLOADS_DIR = path.join(__dirname, '..', 'downloads');
@@ -32,14 +48,16 @@ router.post('/generate-preview', async (req, res) => {
     const jobId = await startGeneration({ nomeDestinatario, relacao, memoria, genero, voz });
 
     // Salva estado pendente com jobId
-    global.pendingOrders.set(orderId, {
+    const pendingOrder = {
       orderId,
       jobId,
       formData: { nomeDestinatario, relacao, memoria, genero, voz, emailEntrega },
       emailEntrega: emailEntrega || undefined,
       status: 'generating_preview',
       createdAt: new Date(),
-    });
+    };
+    global.pendingOrders.set(orderId, pendingOrder);
+    db.saveOrder(pendingOrder); // backup no Postgres -- não bloqueia a resposta
 
     // Índice reverso jobId → orderId para o endpoint de polling
     global.jobToOrder = global.jobToOrder || new Map();
@@ -65,7 +83,7 @@ router.get('/preview-status/:jobId', async (req, res) => {
   const orderId = global.jobToOrder.get(jobId);
   if (!orderId) return res.status(404).json({ error: 'Job não encontrado.' });
 
-  const order = global.pendingOrders.get(orderId);
+  const order = await getOrderResilient(orderId);
   if (!order) return res.status(404).json({ error: 'Pedido não encontrado.' });
 
   // Já estava pronto (polling repetido)
@@ -100,12 +118,14 @@ router.get('/preview-status/:jobId', async (req, res) => {
       order.previewFilePath = previewPath;
       order.previewUrl = `/api/preview-audio/${orderId}`;
       order.status = 'preview_ready';
+      db.saveOrder(order);
       console.log(`[preview-status] Job ${jobId} pronto (preview cortado 40s) → orderId ${orderId}`);
       return res.json({ status: 'ready', previewUrl: order.previewUrl, orderId });
     }
 
     if (result.status === 'FAILED') {
       order.status = 'error';
+      db.saveOrder(order);
       console.error(`[preview-status] Job ${jobId} falhou:`, result.error);
       return res.json({ status: 'error', message: result.error });
     }
@@ -122,8 +142,8 @@ router.get('/preview-status/:jobId', async (req, res) => {
 // ─── GET /api/preview-audio/:orderId ───
 // Serve o preview JÁ CORTADO EM 40s. É a única URL de áudio que o navegador
 // recebe antes da compra — a URL completa (order.rawPreviewUrl) nunca sai do servidor.
-router.get('/preview-audio/:orderId', (req, res) => {
-  const order = global.pendingOrders.get(req.params.orderId);
+router.get('/preview-audio/:orderId', async (req, res) => {
+  const order = await getOrderResilient(req.params.orderId);
   if (!order?.previewFilePath || !fs.existsSync(order.previewFilePath)) {
     return res.status(404).json({ error: 'Preview não encontrado.' });
   }
@@ -139,7 +159,7 @@ router.get('/preview-audio/:orderId', (req, res) => {
 router.post('/generate-full', async (req, res) => {
   const { orderId } = req.body;
 
-  const order = global.pendingOrders.get(orderId);
+  const order = await getOrderResilient(orderId);
   if (!order) {
     return res.status(404).json({ error: 'Pedido não encontrado.' });
   }
@@ -149,6 +169,7 @@ router.post('/generate-full', async (req, res) => {
   }
 
   order.status = 'generating_full';
+  db.saveOrder(order);
 
   // Email: prioriza o do webhook Ticto (comprador); fallback para formulário
   const { emailEntrega: emailFromWebhook } = req.body;
@@ -165,6 +186,7 @@ router.post('/generate-full', async (req, res) => {
     order.status        = 'complete';
     order.downloadToken = token;
     order.fullAudioUrl  = audioUrl;
+    db.saveOrder(order);
 
     if (emailForDelivery) {
       await emailService.sendDownloadEmail({
@@ -182,6 +204,7 @@ router.post('/generate-full', async (req, res) => {
   } catch (err) {
     console.error('Erro ao gerar música completa:', err.message);
     order.status = 'error';
+    db.saveOrder(order);
     return res.status(500).json({ error: 'Erro ao gerar música completa.' });
   }
 });

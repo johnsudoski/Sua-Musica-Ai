@@ -154,7 +154,7 @@ router.post('/ticto', async (req, res) => {
     } else if (campaignId) {
       triggerFullGeneration(campaignId, email, productType);
     } else if (email) {
-      const found = findOrderByEmail(email);
+      const found = await findOrderByEmail(email);
       if (found) {
         triggerFullGeneration(found.orderId, email, productType);
       } else {
@@ -201,11 +201,22 @@ async function handleVideoPurchase(requestId, email) {
   console.log(`Vídeo Homenagem: música pronta para request_id ${requestId} — aguardando montagem do vídeo`);
 }
 
-function findOrderByEmail(email) {
+async function findOrderByEmail(email) {
+  const normalized = (email || '').toLowerCase().trim();
   for (const [, order] of global.pendingOrders) {
-    if (order.formData?.emailEntrega === email && order.status === 'preview_ready') {
+    const orderEmail = (order.formData?.emailEntrega || order.emailEntrega || '').toLowerCase().trim();
+    if (orderEmail === normalized && order.status === 'preview_ready') {
       return order;
     }
+  }
+  // Não achou em memória (ex: servidor reiniciou entre o preview e o pagamento) --
+  // tenta recuperar do backup no Postgres antes de desistir.
+  const row = await db.getOrderByEmail(normalized, 'preview_ready').catch(() => null);
+  if (row) {
+    const recovered = db.orderRowToMemoryFormat(row);
+    global.pendingOrders.set(recovered.orderId, recovered);
+    console.warn(`[orders] Pedido de ${normalized} recuperado do Postgres (não estava em memória)`);
+    return recovered;
   }
   return null;
 }

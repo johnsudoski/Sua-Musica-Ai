@@ -46,14 +46,16 @@ router.post('/generate', async (req, res) => {
   const orderId = crypto.randomUUID();
   const formData = { nomeDestinatario, relacao, memoria, genero, voz };
 
-  global.pendingOrders.set(orderId, {
+  const pendingOrder = {
     orderId,
     formData: { ...formData, emailEntrega: normalizedEmail },
     emailEntrega: normalizedEmail,
     status: 'generating_full',
     createdAt: new Date(),
     source: 'credits',
-  });
+  };
+  global.pendingOrders.set(orderId, pendingOrder);
+  db.saveOrder(pendingOrder); // backup no Postgres -- não bloqueia a resposta
 
   res.json({ success: true, orderId, message: 'Música em produção. Isso leva de 3 a 5 minutos.' });
 
@@ -68,6 +70,7 @@ router.post('/generate', async (req, res) => {
     order.status        = 'complete';
     order.downloadToken = token;
     order.fullAudioUrl   = audioUrl;
+    db.saveOrder(order);
 
     await emailService.sendDownloadEmail({
       to: normalizedEmail,
@@ -79,7 +82,7 @@ router.post('/generate', async (req, res) => {
   } catch (err) {
     console.error(`[credits/generate] Erro ao gerar música (orderId ${orderId}):`, err.message);
     const order = global.pendingOrders.get(orderId);
-    if (order) order.status = 'error';
+    if (order) { order.status = 'error'; db.saveOrder(order); }
     // Devolve o crédito já que a geração falhou
     await db.grantCredits(normalizedEmail, 1).catch(() => {});
   }
