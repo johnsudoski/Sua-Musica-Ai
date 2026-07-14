@@ -176,10 +176,11 @@ router.post('/generate-full', async (req, res) => {
   const emailForDelivery = emailFromWebhook || order.formData?.emailEntrega;
   if (emailForDelivery) order.emailEntrega = emailForDelivery; // persiste para delivery-status
 
+  let audioUrl, token;
   try {
-    const { audioUrl } = await generateFull(order.formData);
+    ({ audioUrl } = await generateFull(order.formData));
 
-    const token = crypto.randomBytes(32).toString('hex');
+    token = crypto.randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
     global.downloadTokens.set(token, { orderId, audioUrl, expiresAt });
 
@@ -187,26 +188,34 @@ router.post('/generate-full', async (req, res) => {
     order.downloadToken = token;
     order.fullAudioUrl  = audioUrl;
     db.saveOrder(order);
+  } catch (err) {
+    // Falha de verdade -- a música não existe. Isso sim é 'error'.
+    console.error('Erro ao gerar música completa:', err.message);
+    order.status = 'error';
+    db.saveOrder(order);
+    return res.status(500).json({ error: 'Erro ao gerar música completa.' });
+  }
 
-    if (emailForDelivery) {
+  // A música já existe e está salva (status='complete') -- uma falha aqui
+  // embaixo é só de NOTIFICAÇÃO, nunca deve reverter o pedido pra 'error'
+  // (isso já aconteceu de verdade: cliente pagou, música ficou pronta, o
+  // envio do email falhou e o pedido inteiro ficou marcado como erro).
+  if (emailForDelivery) {
+    try {
       await emailService.sendDownloadEmail({
         to: emailForDelivery,
         nomeDestinatario: order.formData.nomeDestinatario,
         downloadUrl: `${process.env.APP_URL}/api/download/${token}`,
         audioUrl,
       });
-    } else {
-      console.warn(`generate-full: orderId ${orderId} sem email para entrega — pulando envio`);
+    } catch (emailErr) {
+      console.error(`generate-full: música pronta (orderId ${orderId}) mas falha ao enviar email:`, emailErr.message);
     }
-
-    return res.json({ success: true, downloadToken: token, message: 'Música completa gerada e email enviado!' });
-
-  } catch (err) {
-    console.error('Erro ao gerar música completa:', err.message);
-    order.status = 'error';
-    db.saveOrder(order);
-    return res.status(500).json({ error: 'Erro ao gerar música completa.' });
+  } else {
+    console.warn(`generate-full: orderId ${orderId} sem email para entrega — pulando envio`);
   }
+
+  return res.json({ success: true, downloadToken: token, message: 'Música completa gerada e email enviado!' });
 });
 
 module.exports = router;

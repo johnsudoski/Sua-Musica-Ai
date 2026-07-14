@@ -1,10 +1,11 @@
 /**
  * Serviço de email — entrega do link de download após pagamento
  *
- * Prioridade de configuração:
- *   1. RESEND_API_KEY  → API HTTP (funciona em qualquer cloud, recomendado)
- *   2. SMTP_HOST       → SMTP genérico (Brevo, MailerSend, etc.)
- *   3. GMAIL_USER      → Gmail App Password (pode sofrer timeout em cloud)
+ * Tenta em cascata: Resend → SMTP → Gmail. Antes, só tentava o PRIMEIRO
+ * provider configurado e desistia se ele falhasse -- foi assim que um
+ * cliente real ficou sem receber o email quando o Resend rejeitou o envio
+ * (domínio não verificado só permite mandar pro dono da conta) mesmo com
+ * Gmail configurado e funcional como alternativa.
  */
 
 const axios = require('axios');
@@ -64,7 +65,7 @@ function buildHtml({ nomeDestinatario, downloadUrl, appUrl }) {
 </html>`.trim();
 }
 
-// ── Opção 1: Resend API HTTP (recomendado em cloud) ──
+// ── Opção 1: Resend API HTTP (recomendado em cloud, mas exige domínio verificado) ──
 async function sendViaResend({ to, from, subject, html, text }) {
   const res = await axios.post(
     'https://api.resend.com/emails',
@@ -91,7 +92,7 @@ async function sendViaSmtp({ to, from, subject, html, text }) {
   return transporter.sendMail({ from, to, subject, html, text });
 }
 
-// ── Opção 3: Gmail ──
+// ── Opção 3: Gmail (sem a restrição de domínio do Resend em modo teste) ──
 async function sendViaGmail({ to, from, subject, html, text }) {
   const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -101,43 +102,73 @@ async function sendViaGmail({ to, from, subject, html, text }) {
 }
 
 /**
- * Envia email com link de download da música.
- * Detecta automaticamente qual provider usar.
+ * Envia por Resend -> SMTP -> Gmail, em cascata. Só desiste se TODOS os
+ * providers configurados falharem (não só o primeiro).
  */
-async function sendDownloadEmail({ to, nomeDestinatario, downloadUrl, audioUrl }) {
-  const appUrl = process.env.APP_URL || 'https://suamusicaai.com.br';
-  const from = process.env.EMAIL_FROM || 'SuaMúsicaAI <onboarding@resend.dev>';
-  const subject = `🎵 Sua música para ${nomeDestinatario} está pronta para download!`;
-  const html = buildHtml({ nomeDestinatario, downloadUrl, appUrl });
-  const text = `Sua música para ${nomeDestinatario} está pronta!\n\nDownload: ${downloadUrl}\n\n⏰ Link expira em 48h. Salve o arquivo!\n\nEquipe SuaMúsicaAI`;
+async function dispatchEmail({ to, subject, html, text, logLabel = '' }) {
+  const errors = [];
+  const label = logLabel ? `${logLabel} ` : '';
 
   if (process.env.RESEND_API_KEY) {
-    console.log(`[email] Enviando via Resend para ${to}`);
-    const info = await sendViaResend({ to, from, subject, html, text });
-    console.log(`[email] Resend OK: ${info.id}`);
-    return info;
+    try {
+      const from = process.env.EMAIL_FROM || 'SuaMúsicaAI <onboarding@resend.dev>';
+      console.log(`[email] Enviando ${label}via Resend para ${to}`);
+      const info = await sendViaResend({ to, from, subject, html, text });
+      console.log(`[email] Resend OK: ${info.id}`);
+      return info;
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message;
+      console.error(`[email] Resend falhou (${msg}) — tentando próximo provider`);
+      errors.push(`Resend: ${msg}`);
+    }
   }
 
   if (process.env.SMTP_HOST) {
-    console.log(`[email] Enviando via SMTP (${process.env.SMTP_HOST}) para ${to}`);
-    const info = await sendViaSmtp({ to, from, subject, html, text });
-    console.log(`[email] SMTP OK: ${info.messageId}`);
-    return info;
+    try {
+      const from = process.env.EMAIL_FROM || 'SuaMúsicaAI <onboarding@resend.dev>';
+      console.log(`[email] Enviando ${label}via SMTP (${process.env.SMTP_HOST}) para ${to}`);
+      const info = await sendViaSmtp({ to, from, subject, html, text });
+      console.log(`[email] SMTP OK: ${info.messageId}`);
+      return info;
+    } catch (err) {
+      console.error(`[email] SMTP falhou (${err.message}) — tentando próximo provider`);
+      errors.push(`SMTP: ${err.message}`);
+    }
   }
 
   if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
-    console.log(`[email] Enviando via Gmail para ${to}`);
-    const info = await sendViaGmail({ to, from, subject, html, text });
-    console.log(`[email] Gmail OK: ${info.messageId}`);
-    return info;
+    try {
+      const from = `SuaMúsicaAI <${process.env.GMAIL_USER}>`;
+      console.log(`[email] Enviando ${label}via Gmail para ${to}`);
+      const info = await sendViaGmail({ to, from, subject, html, text });
+      console.log(`[email] Gmail OK: ${info.messageId}`);
+      return info;
+    } catch (err) {
+      console.error(`[email] Gmail falhou (${err.message})`);
+      errors.push(`Gmail: ${err.message}`);
+    }
   }
 
-  // Modo log (sem config de email)
-  console.log('\n====== [EMAIL - SEM CONFIG] ======');
+  console.log(`\n====== [EMAIL ${logLabel} — TODOS OS PROVIDERS FALHARAM OU SEM CONFIG] ======`);
   console.log('Para:', to);
-  console.log('Download URL:', downloadUrl);
+  if (errors.length) console.log('Erros:', errors.join(' | '));
   console.log('==========================================\n');
+
+  if (errors.length) {
+    throw new Error(`Falha ao enviar email (${errors.join(' | ')})`);
+  }
   return { messageId: 'no-config', to };
+}
+
+/**
+ * Envia email com link de download da música.
+ */
+async function sendDownloadEmail({ to, nomeDestinatario, downloadUrl, audioUrl }) {
+  const appUrl  = process.env.APP_URL || 'https://suamusicaai.com.br';
+  const subject = `🎵 Sua música para ${nomeDestinatario} está pronta para download!`;
+  const html    = buildHtml({ nomeDestinatario, downloadUrl, appUrl });
+  const text    = `Sua música para ${nomeDestinatario} está pronta!\n\nDownload: ${downloadUrl}\n\n⏰ Link expira em 48h. Salve o arquivo!\n\nEquipe SuaMúsicaAI`;
+  return dispatchEmail({ to, subject, html, text, logLabel: '' });
 }
 
 // ── Template: Pacote 3 Músicas ──
@@ -200,39 +231,12 @@ function buildPack3Html({ nomeDestinatario, downloadUrls, appUrl }) {
  */
 async function sendPack3Email({ to, nomeDestinatario, downloadUrls }) {
   const appUrl  = process.env.APP_URL || 'https://suamusicaai.com.br';
-  const from    = process.env.EMAIL_FROM || 'SuaMúsicaAI <onboarding@resend.dev>';
   const subject = `🎵 Seu Pacote 3 Músicas para ${nomeDestinatario} está pronto!`;
   const html    = buildPack3Html({ nomeDestinatario, downloadUrls, appUrl });
   const text    = `Seu Pacote 3 Músicas para ${nomeDestinatario} está pronto!\n\n`
     + downloadUrls.map((url, i) => `Música ${i + 1}: ${url}`).join('\n')
     + '\n\n⏰ Links expiram em 48h. Salve os arquivos!\n\nEquipe SuaMúsicaAI';
-
-  if (process.env.RESEND_API_KEY) {
-    console.log(`[email] Enviando Pacote 3 Músicas via Resend para ${to}`);
-    const info = await sendViaResend({ to, from, subject, html, text });
-    console.log(`[email] Resend OK: ${info.id}`);
-    return info;
-  }
-
-  if (process.env.SMTP_HOST) {
-    console.log(`[email] Enviando Pacote 3 Músicas via SMTP para ${to}`);
-    const info = await sendViaSmtp({ to, from, subject, html, text });
-    console.log(`[email] SMTP OK: ${info.messageId}`);
-    return info;
-  }
-
-  if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
-    console.log(`[email] Enviando Pacote 3 Músicas via Gmail para ${to}`);
-    const info = await sendViaGmail({ to, from, subject, html, text });
-    console.log(`[email] Gmail OK: ${info.messageId}`);
-    return info;
-  }
-
-  console.log('\n====== [EMAIL PACK3 - SEM CONFIG] ======');
-  console.log('Para:', to);
-  downloadUrls.forEach((url, i) => console.log(`Música ${i + 1}:`, url));
-  console.log('==========================================\n');
-  return { messageId: 'no-config', to };
+  return dispatchEmail({ to, subject, html, text, logLabel: 'Pacote 3 Músicas' });
 }
 
 // ── Template: MP3 + Vídeo com Letra ──
@@ -304,40 +308,12 @@ function buildVideoHtml({ nomeDestinatario, mp3DownloadUrl, videoDownloadUrl, ap
  */
 async function sendVideoEmail({ to, nomeDestinatario, mp3DownloadUrl, videoDownloadUrl }) {
   const appUrl  = process.env.APP_URL || 'https://suamusicaai.com.br';
-  const from    = process.env.EMAIL_FROM || 'SuaMúsicaAI <onboarding@resend.dev>';
   const subject = `🎵🎬 Sua música + vídeo com letra para ${nomeDestinatario} estão prontos!`;
   const html    = buildVideoHtml({ nomeDestinatario, mp3DownloadUrl, videoDownloadUrl, appUrl });
   const text    = `Sua música + vídeo para ${nomeDestinatario} estão prontos!\n\n`
     + `MP3: ${mp3DownloadUrl}\nVídeo: ${videoDownloadUrl}\n\n`
     + '⏰ Links expiram em 48h. Baixe agora!\n\nEquipe SuaMúsicaAI';
-
-  if (process.env.RESEND_API_KEY) {
-    console.log(`[email] Enviando Vídeo+MP3 via Resend para ${to}`);
-    const info = await sendViaResend({ to, from, subject, html, text });
-    console.log(`[email] Resend OK: ${info.id}`);
-    return info;
-  }
-
-  if (process.env.SMTP_HOST) {
-    console.log(`[email] Enviando Vídeo+MP3 via SMTP para ${to}`);
-    const info = await sendViaSmtp({ to, from, subject, html, text });
-    console.log(`[email] SMTP OK: ${info.messageId}`);
-    return info;
-  }
-
-  if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
-    console.log(`[email] Enviando Vídeo+MP3 via Gmail para ${to}`);
-    const info = await sendViaGmail({ to, from, subject, html, text });
-    console.log(`[email] Gmail OK: ${info.messageId}`);
-    return info;
-  }
-
-  console.log('\n====== [EMAIL VIDEO - SEM CONFIG] ======');
-  console.log('Para:', to);
-  console.log('MP3:', mp3DownloadUrl);
-  console.log('Vídeo:', videoDownloadUrl);
-  console.log('==========================================\n');
-  return { messageId: 'no-config', to };
+  return dispatchEmail({ to, subject, html, text, logLabel: 'Vídeo+MP3' });
 }
 
 // ── Template: Créditos liberados (Pacote 3 Músicas) ──
@@ -394,36 +370,10 @@ function buildCreditsHtml({ balance, creditsUrl }) {
  * Envia email avisando que os créditos do Pacote 3 Músicas foram liberados.
  */
 async function sendCreditsEmail({ to, balance, creditsUrl }) {
-  const from    = process.env.EMAIL_FROM || 'SuaMúsicaAI <onboarding@resend.dev>';
   const subject = `🎵 Seus ${balance} créditos de música estão liberados!`;
   const html    = buildCreditsHtml({ balance, creditsUrl });
   const text    = `Sua compra foi confirmada! Você tem ${balance} música(s) disponível(is).\n\nCrie agora: ${creditsUrl}\n\nUse o mesmo email desta compra.\n\nEquipe SuaMúsicaAI`;
-
-  if (process.env.RESEND_API_KEY) {
-    console.log(`[email] Enviando aviso de créditos via Resend para ${to}`);
-    const info = await sendViaResend({ to, from, subject, html, text });
-    console.log(`[email] Resend OK: ${info.id}`);
-    return info;
-  }
-
-  if (process.env.SMTP_HOST) {
-    console.log(`[email] Enviando aviso de créditos via SMTP para ${to}`);
-    const info = await sendViaSmtp({ to, from, subject, html, text });
-    console.log(`[email] SMTP OK: ${info.messageId}`);
-    return info;
-  }
-
-  if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
-    console.log(`[email] Enviando aviso de créditos via Gmail para ${to}`);
-    const info = await sendViaGmail({ to, from, subject, html, text });
-    console.log(`[email] Gmail OK: ${info.messageId}`);
-    return info;
-  }
-
-  console.log('\n====== [EMAIL CREDITOS - SEM CONFIG] ======');
-  console.log('Para:', to, '| Saldo:', balance, '| URL:', creditsUrl);
-  console.log('==========================================\n');
-  return { messageId: 'no-config', to };
+  return dispatchEmail({ to, subject, html, text, logLabel: 'créditos' });
 }
 
 module.exports = { sendDownloadEmail, sendPack3Email, sendVideoEmail, sendCreditsEmail };

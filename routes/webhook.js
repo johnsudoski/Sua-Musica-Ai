@@ -178,8 +178,14 @@ async function handlePack3Purchase(email) {
   const balance = await db.grantCredits(normalized, 3);
   console.log(`Pack3: +3 créditos para ${normalized} (saldo agora: ${balance})`);
 
-  const creditsUrl = process.env.CREDITS_SERVICE_URL || process.env.APP_URL || '';
-  await emailService.sendCreditsEmail({ to: normalized, balance, creditsUrl });
+  // Os créditos já foram gravados -- uma falha de email aqui não deve
+  // reverter nada, só falta a notificação.
+  try {
+    const creditsUrl = process.env.CREDITS_SERVICE_URL || process.env.APP_URL || '';
+    await emailService.sendCreditsEmail({ to: normalized, balance, creditsUrl });
+  } catch (emailErr) {
+    console.error(`Pack3: créditos concedidos para ${normalized} mas falha ao enviar email:`, emailErr.message);
+  }
 }
 
 // ─── Vídeo Homenagem: gera a música e marca o pedido como pago; a montagem

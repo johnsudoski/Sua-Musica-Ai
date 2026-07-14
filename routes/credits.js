@@ -60,9 +60,10 @@ router.post('/generate', async (req, res) => {
   res.json({ success: true, orderId, message: 'Música em produção. Isso leva de 3 a 5 minutos.' });
 
   // Continua em background -- o cliente faz polling em /api/order-status/:orderId
+  let audioUrl, token;
   try {
-    const { audioUrl } = await generateFull(formData);
-    const token = crypto.randomBytes(32).toString('hex');
+    ({ audioUrl } = await generateFull(formData));
+    token = crypto.randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
     global.downloadTokens.set(token, { orderId, audioUrl, expiresAt });
 
@@ -71,7 +72,19 @@ router.post('/generate', async (req, res) => {
     order.downloadToken = token;
     order.fullAudioUrl   = audioUrl;
     db.saveOrder(order);
+  } catch (err) {
+    // Falha de verdade -- a música não existe. Devolve o crédito.
+    console.error(`[credits/generate] Erro ao gerar música (orderId ${orderId}):`, err.message);
+    const order = global.pendingOrders.get(orderId);
+    if (order) { order.status = 'error'; db.saveOrder(order); }
+    await db.grantCredits(normalizedEmail, 1).catch(() => {});
+    return;
+  }
 
+  // Música já está pronta e salva -- uma falha de email aqui não deve
+  // reverter o status nem devolver o crédito (o cliente já foi atendido,
+  // só a notificação falhou).
+  try {
     await emailService.sendDownloadEmail({
       to: normalizedEmail,
       nomeDestinatario,
@@ -79,12 +92,8 @@ router.post('/generate', async (req, res) => {
       audioUrl,
     });
     console.log(`[credits/generate] Música gerada e email enviado para ${normalizedEmail} (orderId ${orderId})`);
-  } catch (err) {
-    console.error(`[credits/generate] Erro ao gerar música (orderId ${orderId}):`, err.message);
-    const order = global.pendingOrders.get(orderId);
-    if (order) { order.status = 'error'; db.saveOrder(order); }
-    // Devolve o crédito já que a geração falhou
-    await db.grantCredits(normalizedEmail, 1).catch(() => {});
+  } catch (emailErr) {
+    console.error(`[credits/generate] Música pronta (orderId ${orderId}) mas falha ao enviar email:`, emailErr.message);
   }
 });
 
