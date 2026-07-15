@@ -141,11 +141,17 @@ router.post('/ticto', async (req, res) => {
   const saleValue = PRODUCT_VALUES[productType] || PRODUCT_VALUES.mp3;
 
   // Reporta a compra real pro Meta via Conversions API (o navegador nunca vê
-  // essa conversão, já que o pagamento acontece na página da Ticto).
+  // essa conversão, já que o pagamento acontece na página da Ticto). Busca
+  // fbp/fbc capturados no site (armazenados no form_data do pedido) pra
+  // melhorar o match quality -- só com email o Meta recebe o evento mas
+  // não necessariamente consegue linkar ao clique que originou a venda.
+  const { fbp, fbc } = await getOrderFbData(campaignId, email);
   sendPurchaseEvent({
     email,
     value: saleValue,
     eventId: campaignId ? `${campaignId}-purchase` : undefined,
+    fbp,
+    fbc,
   }).catch(() => {}); // sendPurchaseEvent já trata os próprios erros internamente
 
   // Registra a venda pra ter uma fonte de verdade de receita (painel financeiro)
@@ -210,6 +216,24 @@ async function handleVideoPurchase(requestId, email) {
   const { audioUrl } = await generateFull(videoRequest.form_data || {});
   await db.markVideoRequestPaid(requestId, { email, audioUrl });
   console.log(`Vídeo Homenagem: música pronta para request_id ${requestId} — aguardando montagem do vídeo`);
+}
+
+// Busca fbp/fbc capturados no site (gravados no form_data do pedido em
+// generate-preview) pra anexar no evento Purchase do Conversions API.
+async function getOrderFbData(campaignId, email) {
+  try {
+    if (campaignId) {
+      const row = await db.getOrder(campaignId);
+      if (row?.form_data) return { fbp: row.form_data.fbp, fbc: row.form_data.fbc };
+    }
+    if (email) {
+      const row = await db.getOrderByEmail(email);
+      if (row?.form_data) return { fbp: row.form_data.fbp, fbc: row.form_data.fbc };
+    }
+  } catch (err) {
+    console.warn('[webhook] Não foi possível recuperar fbp/fbc do pedido:', err.message);
+  }
+  return {};
 }
 
 async function findOrderByEmail(email) {

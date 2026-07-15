@@ -33,7 +33,7 @@ const DOWNLOADS_DIR = path.join(__dirname, '..', 'downloads');
 // Retorna jobId IMEDIATAMENTE (não bloqueia).
 // Frontend faz polling em GET /preview-status/:jobId
 router.post('/generate-preview', async (req, res) => {
-  const { nomeDestinatario, relacao, memoria, genero, voz, emailEntrega } = req.body;
+  const { nomeDestinatario, relacao, memoria, genero, voz, emailEntrega, fbp, fbc } = req.body;
 
   if (!nomeDestinatario || !relacao || !memoria || !genero) {
     return res.status(400).json({ error: 'Preencha todos os campos obrigatórios.' });
@@ -51,7 +51,7 @@ router.post('/generate-preview', async (req, res) => {
     const pendingOrder = {
       orderId,
       jobId,
-      formData: { nomeDestinatario, relacao, memoria, genero, voz, emailEntrega },
+      formData: { nomeDestinatario, relacao, memoria, genero, voz, emailEntrega, fbp: fbp || undefined, fbc: fbc || undefined },
       emailEntrega: emailEntrega || undefined,
       status: 'generating_preview',
       createdAt: new Date(),

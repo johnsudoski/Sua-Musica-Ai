@@ -7,6 +7,24 @@ var API_BASE = (window.location.hostname === 'localhost' || window.location.host
   ? 'http://localhost:3000'
   : '';
 
+// ─── Meta Click/Browser IDs (melhora o match quality do Conversions API) ───
+function getCookie(name) {
+  var match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  return match ? match[2] : null;
+}
+
+function getOrStoreFbc() {
+  var fbclid = new URLSearchParams(window.location.search).get('fbclid');
+  if (fbclid) {
+    var fbc = 'fb.1.' + Date.now() + '.' + fbclid;
+    try { localStorage.setItem('sua_musica_fbc', fbc); } catch (_) {}
+    return fbc;
+  }
+  try { return localStorage.getItem('sua_musica_fbc'); } catch (_) { return null; }
+}
+
+var _metaFbc = getOrStoreFbc();
+
 // ─── FAQ accordion ───
 document.querySelectorAll('.faq-q').forEach(function(btn) {
   btn.addEventListener('click', function() {
@@ -264,6 +282,8 @@ if (form) {
         genero:           genero,
         voz:              voz,
         emailEntrega:     email,
+        fbp:              getCookie('_fbp'),
+        fbc:              _metaFbc,
       }),
     })
     .then(function(r) { return r.json(); })

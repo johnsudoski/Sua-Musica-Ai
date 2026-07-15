@@ -25,7 +25,7 @@ function sha256(value) {
  * Envia o evento Purchase pro Meta via Conversions API.
  * Nunca lança erro pra fora -- webhook de pagamento não pode falhar por causa disso.
  */
-async function sendPurchaseEvent({ email, value, currency = 'BRL', eventId, sourceUrl }) {
+async function sendPurchaseEvent({ email, value, currency = 'BRL', eventId, sourceUrl, fbp, fbc }) {
   if (!ACCESS_TOKEN) {
     console.warn('[meta-capi] META_ACCESS_TOKEN não configurado -- Purchase não enviado');
     return;
@@ -35,14 +35,16 @@ async function sendPurchaseEvent({ email, value, currency = 'BRL', eventId, sour
     return;
   }
 
+  const userData = { em: [sha256(email)] };
+  if (fbp) userData.fbp = fbp;
+  if (fbc) userData.fbc = fbc;
+
   const event = {
     event_name: 'Purchase',
     event_time: Math.floor(Date.now() / 1000),
     action_source: 'website',
     event_source_url: sourceUrl || process.env.APP_URL || 'https://sua-musica-ai-production.up.railway.app',
-    user_data: {
-      em: [sha256(email)],
-    },
+    user_data: userData,
     custom_data: {
       currency,
       value,
@@ -56,7 +58,7 @@ async function sendPurchaseEvent({ email, value, currency = 'BRL', eventId, sour
       { data: [event] },
       { params: { access_token: ACCESS_TOKEN }, timeout: 10000 }
     );
-    console.log(`[meta-capi] Purchase enviado: email=${email} valor=R$${value} events_received=${res.data.events_received}`);
+    console.log(`[meta-capi] Purchase enviado: email=${email} valor=R$${value} fbp=${fbp ? 'sim' : 'não'} fbc=${fbc ? 'sim' : 'não'} events_received=${res.data.events_received}`);
     return res.data;
   } catch (err) {
     console.error('[meta-capi] Erro ao enviar Purchase:', err.response?.data ? JSON.stringify(err.response.data) : err.message);
