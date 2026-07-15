@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel Financeiro — SuaMúsicaAI</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0D0D1A; color: #e2e2f0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 24px; }
+    .wrap { max-width: 960px; margin: 0 auto; }
+    h1 { font-size: 24px; margin-bottom: 4px; }
+    .sub { color: #888; font-size: 13px; margin-bottom: 24px; }
+    .gate { max-width: 360px; margin: 80px auto; text-align: center; }
+    .gate input { width: 100%; padding: 12px 16px; border-radius: 10px; border: 1px solid #2a2a45; background: #161628; color: #fff; margin-bottom: 12px; }
+    .gate button, .btn { width: 100%; padding: 12px; border-radius: 10px; border: none; background: linear-gradient(135deg, #E91E8C, #7B2FBE); color: #fff; font-weight: 700; cursor: pointer; }
+    .hidden { display: none; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 24px; }
+    .card { background: #161628; border: 1px solid #2a2a45; border-radius: 14px; padding: 18px; }
+    .card .label { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .card .value { font-size: 26px; font-weight: 800; }
+    .card .value.pos { color: #22c55e; }
+    .card .value.neg { color: #f87171; }
+    table { width: 100%; border-collapse: collapse; background: #161628; border: 1px solid #2a2a45; border-radius: 14px; overflow: hidden; margin-bottom: 24px; }
+    th, td { padding: 12px 16px; text-align: left; font-size: 14px; border-bottom: 1px solid #2a2a45; }
+    th { color: #888; font-weight: 600; font-size: 12px; text-transform: uppercase; }
+    tr:last-child td { border-bottom: none; }
+    .section-title { font-size: 16px; margin: 28px 0 12px; color: #E91E8C; }
+    .err { color: #f87171; text-align: center; margin-top: 40px; }
+    .loading { text-align: center; color: #888; margin-top: 40px; }
+  </style>
+</head>
+<body>
+
+<div class="wrap">
+  <div id="gate" class="gate">
+    <h1>🔒 Painel Financeiro</h1>
+    <p class="sub">Acesso restrito</p>
+    <br>
+    <input type="password" id="tokenInput" placeholder="Token de acesso" />
+    <button onclick="loadPanel()">Entrar</button>
+    <p id="gateErr" class="err hidden">Token inválido.</p>
+  </div>
+
+  <div id="content" class="hidden">
+    <h1>💰 Painel Financeiro</h1>
+    <p class="sub" id="periodLabel">Últimos 30 dias</p>
+
+    <div class="grid" id="summaryCards"></div>
+
+    <div class="section-title">Vendas por produto (30 dias)</div>
+    <table id="productTable"><thead><tr><th>Produto</th><th>Qtd</th><th>Receita</th></tr></thead><tbody></tbody></table>
+
+    <div class="section-title">Gasto de anúncios por campanha (30 dias)</div>
+    <table id="adsTable"><thead><tr><th>Campanha</th><th>Gasto</th></tr></thead><tbody></tbody></table>
+
+    <div class="section-title">Comparativo de períodos</div>
+    <table id="periodsTable"><thead><tr><th>Período</th><th>Vendas</th><th>Receita</th></tr></thead><tbody></tbody></table>
+  </div>
+
+  <div id="loadingMsg" class="loading hidden">Carregando...</div>
+</div>
+
+<script>
+var API_BASE = '';
+
+function fmtBRL(v) {
+  return 'R$ ' + Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function loadPanel() {
+  var token = document.getElementById('tokenInput').value.trim();
+  if (!token) return;
+  localStorage.setItem('sma_admin_token', token);
+  fetchData(token);
+}
+
+function fetchData(token) {
+  document.getElementById('gateErr').classList.add('hidden');
+  document.getElementById('loadingMsg').classList.remove('hidden');
+
+  fetch(API_BASE + '/api/admin/finance?token=' + encodeURIComponent(token))
+    .then(function(r) {
+      if (r.status === 401) throw new Error('unauthorized');
+      return r.json();
+    })
+    .then(function(data) {
+      document.getElementById('loadingMsg').classList.add('hidden');
+      document.getElementById('gate').classList.add('hidden');
+      document.getElementById('content').classList.remove('hidden');
+      render(data);
+    })
+    .catch(function(err) {
+      document.getElementById('loadingMsg').classList.add('hidden');
+      localStorage.removeItem('sma_admin_token');
+      document.getElementById('gateErr').classList.remove('hidden');
+    });
+}
+
+function render(data) {
+  var est = data.estimate;
+  var cards = [
+    { label: 'Receita (30d)', value: fmtBRL(est.revenue30d), cls: 'pos' },
+    { label: 'Gasto em anúncios (30d)', value: fmtBRL(est.adSpend30d), cls: 'neg' },
+    { label: 'Custo estimado de geração (30d)', value: fmtBRL(est.estimatedGenerationCost30d), cls: 'neg' },
+    { label: 'Lucro estimado (30d)', value: fmtBRL(est.profit30d), cls: est.profit30d >= 0 ? 'pos' : 'neg' },
+    { label: 'Vendas hoje', value: data.sales.hoje.totalCount },
+    { label: 'Vendas 30 dias', value: data.sales.dias30.totalCount },
+  ];
+  var cardsHtml = cards.map(function(c) {
+    return '<div class="card"><div class="label">' + c.label + '</div><div class="value ' + (c.cls || '') + '">' + c.value + '</div></div>';
+  }).join('');
+  document.getElementById('summaryCards').innerHTML = cardsHtml;
+
+  var productNames = { mp3: 'MP3', video: 'Vídeo com Homenagem', pack3: 'Pacote 3 Músicas' };
+  var productRows = Object.keys(data.sales.dias30.byProduct).map(function(p) {
+    var d = data.sales.dias30.byProduct[p];
+    return '<tr><td>' + (productNames[p] || p) + '</td><td>' + d.count + '</td><td>' + fmtBRL(d.totalCents / 100) + '</td></tr>';
+  }).join('') || '<tr><td colspan="3" style="color:#888;">Nenhuma venda no período</td></tr>';
+  document.querySelector('#productTable tbody').innerHTML = productRows;
+
+  var adsRows = data.adSpend.byCampaign.map(function(c) {
+    if (c.error) return '<tr><td>' + c.campaignId + '</td><td style="color:#f87171;">erro: ' + c.error + '</td></tr>';
+    return '<tr><td>' + c.name + '</td><td>' + fmtBRL(c.spend) + '</td></tr>';
+  }).join('');
+  document.querySelector('#adsTable tbody').innerHTML = adsRows;
+
+  var periodNames = { hoje: 'Hoje', dias7: 'Últimos 7 dias', dias30: 'Últimos 30 dias', total: 'Total (desde o início)' };
+  var periodRows = Object.keys(periodNames).map(function(p) {
+    var d = data.sales[p];
+    return '<tr><td>' + periodNames[p] + '</td><td>' + d.totalCount + '</td><td>' + fmtBRL(d.totalCents / 100) + '</td></tr>';
+  }).join('');
+  document.querySelector('#periodsTable tbody').innerHTML = periodRows;
+}
+
+// Auto-login se já tiver token salvo
+(function() {
+  var saved = localStorage.getItem('sma_admin_token');
+  if (saved) {
+    document.getElementById('tokenInput').value = saved;
+    fetchData(saved);
+  }
+})();
+</script>
+</body>
+</html>

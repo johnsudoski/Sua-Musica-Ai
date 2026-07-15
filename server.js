@@ -23,6 +23,7 @@ const webhookRoutes = require('./routes/webhook');
 const downloadRoutes = require('./routes/download');
 const deliveryRoutes = require('./routes/delivery');
 const creditsRoutes = require('./routes/credits');
+const adminRoutes = require('./routes/admin');
 const db = require('./services/db');
 
 const app = express();
@@ -93,11 +94,17 @@ app.use('/api/webhook', webhookRoutes);
 app.use('/api', downloadRoutes);
 app.use('/api', deliveryRoutes);
 app.use('/api/credits', creditsRoutes);
+app.use('/api/admin', adminRoutes);
 
 // ─── Página de obrigado ───
 app.get('/obrigado', (req, res) => {
   res.sendFile(path.join(frontendPath, 'obrigado.html'));
 });
+
+// ─── Páginas legais ───
+app.get('/termos', (req, res) => res.sendFile(path.join(frontendPath, 'termos.html')));
+app.get('/privacidade', (req, res) => res.sendFile(path.join(frontendPath, 'privacidade.html')));
+app.get('/reembolso', (req, res) => res.sendFile(path.join(frontendPath, 'reembolso.html')));
 
 // ─── SPA fallback ───
 app.get('*', (req, res) => {

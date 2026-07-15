@@ -51,6 +51,17 @@ async function initSchema() {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );
     CREATE INDEX IF NOT EXISTS idx_orders_email ON orders(email);
+
+    CREATE TABLE IF NOT EXISTS sales (
+      id SERIAL PRIMARY KEY,
+      product_type TEXT NOT NULL,
+      value_cents INTEGER NOT NULL,
+      email TEXT,
+      campaign_id TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+    CREATE INDEX IF NOT EXISTS idx_sales_created_at ON sales(created_at);
+    CREATE INDEX IF NOT EXISTS idx_sales_product_type ON sales(product_type);
   `);
 }
 
@@ -210,6 +221,60 @@ function orderRowToMemoryFormat(row) {
   };
 }
 
+// ─── Vendas (fonte de verdade de receita -- gravado toda vez que a Ticto
+// confirma pagamento, independente do produto) ───
+
+async function recordSale({ productType, valueCents, email, campaignId }) {
+  try {
+    await pool.query(
+      `INSERT INTO sales (product_type, value_cents, email, campaign_id) VALUES ($1,$2,$3,$4)`,
+      [productType, valueCents, (email || '').toLowerCase().trim() || null, campaignId || null]
+    );
+  } catch (err) {
+    console.error('[db] Erro ao registrar venda:', err.message);
+  }
+}
+
+// Resumo de vendas: total geral + quebra por produto, para hoje / 7 dias / 30 dias / total
+async function getSalesSummary() {
+  const periods = {
+    hoje: `created_at >= date_trunc('day', now())`,
+    dias7: `created_at >= now() - interval '7 days'`,
+    dias30: `created_at >= now() - interval '30 days'`,
+    total: `true`,
+  };
+
+  const summary = {};
+  for (const [key, whereClause] of Object.entries(periods)) {
+    const result = await pool.query(
+      `SELECT product_type, COUNT(*)::int AS count, SUM(value_cents)::int AS total_cents
+       FROM sales WHERE ${whereClause} GROUP BY product_type`
+    );
+    const byProduct = {};
+    let totalCount = 0, totalCents = 0;
+    for (const row of result.rows) {
+      byProduct[row.product_type] = { count: row.count, totalCents: row.total_cents };
+      totalCount += row.count;
+      totalCents += row.total_cents;
+    }
+    summary[key] = { byProduct, totalCount, totalCents };
+  }
+  return summary;
+}
+
+// Série diária de vendas dos últimos N dias (para gráfico simples)
+async function getDailySales(days = 14) {
+  const safeDays = Math.max(1, Math.min(90, parseInt(days, 10) || 14)); // sanitiza -- evita injeção via interval
+  const result = await pool.query(
+    `SELECT date_trunc('day', created_at) AS day, COUNT(*)::int AS count, SUM(value_cents)::int AS total_cents
+     FROM sales
+     WHERE created_at >= now() - ($1 || ' days')::interval
+     GROUP BY day ORDER BY day ASC`,
+    [safeDays]
+  );
+  return result.rows;
+}
+
 module.exports = {
   pool,
   initSchema,
@@ -226,4 +291,7 @@ module.exports = {
   getOrder,
   getOrderByEmail,
   orderRowToMemoryFormat,
+  recordSale,
+  getSalesSummary,
+  getDailySales,
 };

@@ -59,6 +59,7 @@ function buildHtml({ nomeDestinatario, downloadUrl, appUrl }) {
     <div class="footer">
       <p>SuaMúsicaAI • O presente mais emocionante do Brasil 🇧🇷</p>
       <p style="margin-top:8px;"><a href="${appUrl}" style="color:#E91E8C;">Criar outra música</a></p>
+      <p style="margin-top:8px;">Dúvidas? <a href="mailto:suportesuamusicaai@gmail.com" style="color:#888;">suportesuamusicaai@gmail.com</a></p>
     </div>
   </div>
 </body>
@@ -220,6 +221,7 @@ function buildPack3Html({ nomeDestinatario, downloadUrls, appUrl }) {
     <div class="footer">
       <p>SuaMúsicaAI • O presente mais emocionante do Brasil 🇧🇷</p>
       <p style="margin-top:8px;"><a href="${appUrl}" style="color:#E91E8C;">Criar outra música</a></p>
+      <p style="margin-top:8px;">Dúvidas? <a href="mailto:suportesuamusicaai@gmail.com" style="color:#888;">suportesuamusicaai@gmail.com</a></p>
     </div>
   </div>
 </body>
@@ -297,6 +299,7 @@ function buildVideoHtml({ nomeDestinatario, mp3DownloadUrl, videoDownloadUrl, ap
     <div class="footer">
       <p>SuaMúsicaAI • O presente mais emocionante do Brasil 🇧🇷</p>
       <p style="margin-top:8px;"><a href="${appUrl}" style="color:#E91E8C;">Criar outra música</a></p>
+      <p style="margin-top:8px;">Dúvidas? <a href="mailto:suportesuamusicaai@gmail.com" style="color:#888;">suportesuamusicaai@gmail.com</a></p>
     </div>
   </div>
 </body>
@@ -360,6 +363,7 @@ function buildCreditsHtml({ balance, creditsUrl }) {
     </div>
     <div class="footer">
       <p>SuaMúsicaAI • O presente mais emocionante do Brasil 🇧🇷</p>
+      <p style="margin-top:8px;">Dúvidas? <a href="mailto:suportesuamusicaai@gmail.com" style="color:#888;">suportesuamusicaai@gmail.com</a></p>
     </div>
   </div>
 </body>

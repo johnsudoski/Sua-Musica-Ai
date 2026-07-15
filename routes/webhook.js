@@ -138,13 +138,18 @@ router.post('/ticto', async (req, res) => {
   // Responde rápido pra Ticto; processamento continua em background.
   res.json({ received: true });
 
+  const saleValue = PRODUCT_VALUES[productType] || PRODUCT_VALUES.mp3;
+
   // Reporta a compra real pro Meta via Conversions API (o navegador nunca vê
   // essa conversão, já que o pagamento acontece na página da Ticto).
   sendPurchaseEvent({
     email,
-    value: PRODUCT_VALUES[productType] || PRODUCT_VALUES.mp3,
+    value: saleValue,
     eventId: campaignId ? `${campaignId}-purchase` : undefined,
   }).catch(() => {}); // sendPurchaseEvent já trata os próprios erros internamente
+
+  // Registra a venda pra ter uma fonte de verdade de receita (painel financeiro)
+  db.recordSale({ productType, valueCents: Math.round(saleValue * 100), email, campaignId }).catch(() => {});
 
   try {
     if (productType === 'pack3') {
