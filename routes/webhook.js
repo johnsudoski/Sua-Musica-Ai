@@ -129,8 +129,19 @@ router.post('/ticto', async (req, res) => {
     return res.json({ received: true, action: 'ignored', status });
   }
 
-  const email       = payload?.customer?.email;
-  const campaignId  = payload?.utm_campaign || payload?.sale?.utm_campaign || payload?.order?.utm_campaign;
+  const email = payload?.customer?.email;
+
+  // Ticto v2 manda os UTMs dentro de payload.tracking.utm_campaign -- e quando
+  // não tem valor, manda a STRING LITERAL "Não Informado" (não null/undefined).
+  // O código antigo só olhava payload.utm_campaign / sale.utm_campaign /
+  // order.utm_campaign, que nunca existiram -- por isso campaignId sempre
+  // chegava undefined e o pedido só era localizado via e-mail.
+  const rawCampaignId = payload?.tracking?.utm_campaign
+    || payload?.utm_campaign
+    || payload?.sale?.utm_campaign
+    || payload?.order?.utm_campaign;
+  const campaignId = (rawCampaignId && rawCampaignId !== 'Não Informado') ? rawCampaignId : undefined;
+
   const productType = detectProductType(payload);
 
   console.log(`Ticto webhook: PAGO | email=${email} | campaignId=${campaignId} | produto=${productType}`);
