@@ -124,11 +124,6 @@ router.post('/ticto', async (req, res) => {
   const status = payload?.sale?.status || payload?.order?.status || payload?.status || '';
   const isPaid = ['approved', 'paid', 'complete', 'completed', 'authorized'].includes(String(status).toLowerCase());
 
-  if (!isPaid) {
-    console.log(`Ticto webhook: status=${status} — ignorado`);
-    return res.json({ received: true, action: 'ignored', status });
-  }
-
   const email = payload?.customer?.email;
 
   // Ticto v2 manda os UTMs dentro de payload.tracking.utm_campaign -- e quando
@@ -141,6 +136,23 @@ router.post('/ticto', async (req, res) => {
     || payload?.sale?.utm_campaign
     || payload?.order?.utm_campaign;
   const campaignId = (rawCampaignId && rawCampaignId !== 'Não Informado') ? rawCampaignId : undefined;
+
+  // Telefone vem em payload.customer.phone.{ddi,ddd,number} -- capturamos em
+  // TODO evento (pago ou nao), pra ter fila de recuperacao de PIX pendente
+  // com telefone pronto, sem depender de export manual do painel da Ticto.
+  const phoneObj = payload?.customer?.phone;
+  const phone = (phoneObj?.ddi && phoneObj?.number)
+    ? `${phoneObj.ddi}${phoneObj.ddd || ''}${phoneObj.number}`
+    : undefined;
+
+  if (phone || campaignId) {
+    db.updateOrderContact(campaignId, email, { phone, checkoutStatus: status }).catch(() => {});
+  }
+
+  if (!isPaid) {
+    console.log(`Ticto webhook: status=${status} | email=${email} | telefone=${phone ? 'capturado' : 'nao'} — ignorado`);
+    return res.json({ received: true, action: 'ignored', status });
+  }
 
   const productType = detectProductType(payload);
 

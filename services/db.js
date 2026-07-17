@@ -50,6 +50,8 @@ async function initSchema() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS phone TEXT;
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS checkout_status TEXT;
     CREATE INDEX IF NOT EXISTS idx_orders_email ON orders(email);
 
     CREATE TABLE IF NOT EXISTS sales (
@@ -187,6 +189,44 @@ async function saveOrder(order) {
   }
 }
 
+// Atualiza telefone/status de checkout do pedido em QUALQUER evento da Ticto
+// (pago ou nao) -- permite listar leads de PIX pendente com telefone pronto
+// pra recuperacao, sem depender de export manual do painel da Ticto.
+async function updateOrderContact(orderId, email, { phone, checkoutStatus }) {
+  try {
+    if (orderId) {
+      const result = await pool.query(
+        `UPDATE orders SET phone = COALESCE($2, phone), checkout_status = COALESCE($3, checkout_status), updated_at = now()
+         WHERE order_id = $1 RETURNING order_id`,
+        [orderId, phone || null, checkoutStatus || null]
+      );
+      if (result.rows.length > 0) return;
+    }
+    const normalized = (email || '').toLowerCase().trim();
+    if (normalized) {
+      await pool.query(
+        `UPDATE orders SET phone = COALESCE($2, phone), checkout_status = COALESCE($3, checkout_status), updated_at = now()
+         WHERE order_id = (SELECT order_id FROM orders WHERE email = $1 ORDER BY created_at DESC LIMIT 1)`,
+        [normalized, phone || null, checkoutStatus || null]
+      );
+    }
+  } catch (err) {
+    console.error('[db] Erro ao atualizar contato do pedido:', err.message);
+  }
+}
+
+// Lista pedidos sem compra concluida que ja tem telefone capturado --
+// e a fila pronta pra recuperacao via WhatsApp.
+async function getPendingLeadsWithPhone() {
+  const result = await pool.query(
+    `SELECT order_id, email, phone, checkout_status, form_data, created_at
+     FROM orders
+     WHERE phone IS NOT NULL AND status != 'complete'
+     ORDER BY created_at DESC`
+  );
+  return result.rows;
+}
+
 async function getOrder(orderId) {
   const result = await pool.query(`SELECT * FROM orders WHERE order_id = $1`, [orderId]);
   return result.rows[0] || null;
@@ -291,6 +331,8 @@ module.exports = {
   getOrder,
   getOrderByEmail,
   orderRowToMemoryFormat,
+  updateOrderContact,
+  getPendingLeadsWithPhone,
   recordSale,
   getSalesSummary,
   getDailySales,
