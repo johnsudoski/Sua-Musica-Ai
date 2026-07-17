@@ -89,6 +89,17 @@ app.get('/api/config', (req, res) => {
   });
 });
 
+// Contagem real de pedidos recentes -- alimenta a prova de demanda na landing
+// (substitui a escassez genérica "alta demanda agora" por um número de verdade).
+app.get('/api/stats/live', async (req, res) => {
+  try {
+    const count = await db.getRecentOrderCount(24);
+    res.json({ count });
+  } catch (err) {
+    res.json({ count: null });
+  }
+});
+
 app.use('/api', generateRoutes);
 app.use('/api/webhook', webhookRoutes);
 app.use('/api', downloadRoutes);

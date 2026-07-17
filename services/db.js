@@ -227,6 +227,17 @@ async function getPendingLeadsWithPhone() {
   return result.rows;
 }
 
+// Contagem real de pedidos nas ultimas N horas -- usado pra mostrar prova de
+// demanda de verdade na landing page (em vez de escassez generica sem numero).
+async function getRecentOrderCount(hours = 24) {
+  const safeHours = Math.max(1, Math.min(168, parseInt(hours, 10) || 24));
+  const result = await pool.query(
+    `SELECT COUNT(*)::int AS count FROM orders WHERE created_at >= now() - ($1 || ' hours')::interval`,
+    [safeHours]
+  );
+  return result.rows[0]?.count ?? 0;
+}
+
 async function getOrder(orderId) {
   const result = await pool.query(`SELECT * FROM orders WHERE order_id = $1`, [orderId]);
   return result.rows[0] || null;
@@ -333,6 +344,7 @@ module.exports = {
   orderRowToMemoryFormat,
   updateOrderContact,
   getPendingLeadsWithPhone,
+  getRecentOrderCount,
   recordSale,
   getSalesSummary,
   getDailySales,

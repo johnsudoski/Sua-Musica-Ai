@@ -25,6 +25,18 @@ function getOrStoreFbc() {
 
 var _metaFbc = getOrStoreFbc();
 
+// ─── Prova de demanda real (substitui "alta demanda" genérica por número real) ───
+fetch(API_BASE + '/api/stats/live')
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (!data.count || data.count < 3) return; // não força "demanda alta" se o número for baixo
+    var titleEl = document.getElementById('scarcityTitle');
+    var textEl = document.getElementById('scarcityText');
+    if (titleEl) titleEl.textContent = '🔴 ' + data.count + ' pessoas criaram sua música nas últimas 24h';
+    if (textEl) textEl.textContent = 'Crie a sua agora antes que o preview demore mais pra ficar pronto.';
+  })
+  .catch(function() {});
+
 // ─── FAQ accordion ───
 document.querySelectorAll('.faq-q').forEach(function(btn) {
   btn.addEventListener('click', function() {

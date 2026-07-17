@@ -24,7 +24,7 @@ const PRODUCT_IDS = {
 // ─── Valores dos produtos (pra reportar ao Meta via Conversions API) ───
 const PRODUCT_VALUES = {
   mp3:   19.90,
-  video: 29.90,
+  video: 39.90,
   pack3: 39.90,
 };
 
@@ -36,10 +36,13 @@ function detectProductType(payload) {
   if (offerId === PRODUCT_IDS.video) return 'video';
   if (offerId === PRODUCT_IDS.mp3)   return 'mp3';
 
-  // Fallback por preço, só quando o offer_id não bate com nenhum conhecido
+  // Fallback por preço, só quando o offer_id não bate com nenhum conhecido.
+  // ATENÇÃO: video e pack3 custam os dois R$39,90 -- preço sozinho não
+  // distingue entre eles. Esse fallback só é confiável pro mp3 (R$19,90);
+  // pra video/pack3 dependemos do offer_id bater corretamente.
   const price = Number(payload?.sale?.price || payload?.order?.price || payload?.price || 0);
-  if (price >= 3500) return 'pack3'; // R$35+
-  if (price >= 2500) return 'video'; // R$25-34
+  if (price >= 3500) return 'pack3'; // R$35+ (ambíguo com video, ver nota acima)
+  if (price >= 2500) return 'video'; // R$25-34 (só cai aqui se price < 35, não deveria acontecer pro video real)
   return 'mp3';
 }
 
