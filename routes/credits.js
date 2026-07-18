@@ -90,6 +90,7 @@ router.post('/generate', async (req, res) => {
       nomeDestinatario,
       downloadUrl: `${process.env.APP_URL}/api/download/${token}`,
       audioUrl,
+      downloadToken: token,
     });
     console.log(`[credits/generate] Música gerada e email enviado para ${normalizedEmail} (orderId ${orderId})`);
   } catch (emailErr) {

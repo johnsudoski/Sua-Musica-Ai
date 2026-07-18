@@ -60,6 +60,50 @@ router.get('/download/:token', async (req, res) => {
   return res.status(404).send('Arquivo não disponível.');
 });
 
+// ─── GET /api/reveal/:token ─── (dados pra página de revelação/QR code)
+router.get('/reveal/:token', (req, res) => {
+  const { token } = req.params;
+  const tokenData = global.downloadTokens.get(token);
+  if (!tokenData) return res.status(404).json({ error: 'not_found' });
+  if (new Date() > tokenData.expiresAt) return res.status(410).json({ error: 'expired' });
+
+  const order = global.pendingOrders.get(tokenData.orderId);
+  res.json({
+    ready: true,
+    nomeDestinatario: order?.formData?.nomeDestinatario || '',
+    genero: order?.formData?.genero || '',
+    isVideo: tokenData.isVideo || !!tokenData.videoUrl,
+  });
+});
+
+// ─── GET /api/listen/:token ─── (mesma mídia do download, mas tocando inline no navegador)
+router.get('/listen/:token', async (req, res) => {
+  const { token } = req.params;
+  const tokenData = global.downloadTokens.get(token);
+  if (!tokenData) return res.status(404).send('Link não encontrado ou expirado.');
+  if (new Date() > tokenData.expiresAt) return res.status(410).send('Este link expirou.');
+
+  const isVideo   = tokenData.isVideo || !!tokenData.videoUrl;
+  const mediaUrl  = tokenData.videoUrl || tokenData.audioUrl;
+  const mimeType  = isVideo ? 'video/mp4' : 'audio/mpeg';
+
+  if (tokenData.filePath && fs.existsSync(tokenData.filePath)) {
+    res.setHeader('Content-Disposition', 'inline');
+    res.setHeader('Content-Type', mimeType);
+    return fs.createReadStream(tokenData.filePath).pipe(res);
+  }
+
+  if (mediaUrl) {
+    res.setHeader('Content-Disposition', 'inline');
+    res.setHeader('Content-Type', mimeType);
+    https.get(mediaUrl, (mediaRes) => { mediaRes.pipe(res); })
+      .on('error', () => res.status(500).send('Erro ao carregar áudio.'));
+    return;
+  }
+
+  return res.status(404).send('Arquivo não disponível.');
+});
+
 // ─── GET /api/order-status/:orderId ─── (polling do frontend)
 router.get('/order-status/:orderId', (req, res) => {
   const order = global.pendingOrders.get(req.params.orderId);

@@ -207,6 +207,7 @@ router.post('/generate-full', async (req, res) => {
         nomeDestinatario: order.formData.nomeDestinatario,
         downloadUrl: `${process.env.APP_URL}/api/download/${token}`,
         audioUrl,
+        downloadToken: token,
       });
     } catch (emailErr) {
       console.error(`generate-full: música pronta (orderId ${orderId}) mas falha ao enviar email:`, emailErr.message);

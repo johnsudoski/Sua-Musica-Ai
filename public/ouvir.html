@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sua música — SuaMúsicaAI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <!-- Microsoft Clarity -->
+  <script type="text/javascript">
+      (function(c,l,a,r,i,t,y){
+          c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+          t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+          y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+      })(window, document, "clarity", "script", "xm2zpgivms");
+  </script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: radial-gradient(circle at top, #1a0f2e, #0D0D1A 60%);
+      color: #e2e2f0;
+      font-family: 'Inter', -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+    .card {
+      width: 100%;
+      max-width: 420px;
+      background: linear-gradient(160deg, #1c1830, #221a3a);
+      border: 1px solid rgba(233,30,140,0.25);
+      border-radius: 24px;
+      padding: 36px 28px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    .cover {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #E91E8C, #7B2FBE);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 64px;
+      margin-bottom: 24px;
+      animation: pulse 3s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.02)} }
+    .titulo { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+    .subtitulo { font-size: 13px; color: #a09bb8; margin-bottom: 28px; }
+    audio { width: 100%; margin-bottom: 8px; }
+    .footer-note { font-size: 12px; color: #6a6480; margin-top: 20px; }
+    .footer-note a { color: #E91E8C; text-decoration: none; }
+    .loading, .error-box { color: #a09bb8; padding: 40px 0; }
+    .spinner {
+      width: 28px; height: 28px; margin: 0 auto 14px;
+      border: 3px solid rgba(255,255,255,0.2); border-top-color: #E91E8C;
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<div class="card" id="card">
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <p>Carregando sua música...</p>
+  </div>
+</div>
+
+<script>
+const BASE = window.location.origin;
+const token = new URLSearchParams(window.location.search).get('token');
+
+if (!token) {
+  render('<div class="error-box">Link inválido.</div>');
+} else {
+  fetch(`${BASE}/api/reveal/${token}`)
+    .then(r => r.json())
+    .then(d => {
+      if (d.error) {
+        render('<div class="error-box">Este link expirou ou não foi encontrado. Fale com o suporte: <a href="mailto:suportesuamusicaai@gmail.com" style="color:#E91E8C;">suportesuamusicaai@gmail.com</a></div>');
+        return;
+      }
+      const mediaTag = d.isVideo
+        ? `<video controls style="width:100%;border-radius:12px;margin-bottom:8px;" src="${BASE}/api/listen/${token}"></video>`
+        : `<audio controls src="${BASE}/api/listen/${token}"></audio>`;
+
+      render(`
+        <div class="cover">🎵</div>
+        <div class="titulo">Para ${d.nomeDestinatario || 'você'}</div>
+        <div class="subtitulo">Uma música única, composta pela SuaMúsicaAI</div>
+        ${mediaTag}
+        <div class="footer-note">Feita com carinho por <a href="${BASE}">SuaMúsicaAI</a></div>
+      `);
+    })
+    .catch(() => render('<div class="error-box">Erro ao carregar. Tente novamente.</div>'));
+}
+
+function render(html) {
+  document.getElementById('card').innerHTML = html;
+}
+</script>
+</body>
+</html>

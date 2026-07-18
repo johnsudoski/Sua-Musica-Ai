@@ -10,8 +10,19 @@
 
 const axios = require('axios');
 const nodemailer = require('nodemailer');
+const { generateQrDataUri } = require('./qrGenerator');
 
-function buildHtml({ nomeDestinatario, downloadUrl, appUrl }) {
+function buildQrSection({ qrDataUri, listenUrl }) {
+  if (!qrDataUri || !listenUrl) return '';
+  return `
+      <div style="background:#1c1830;border:1px solid rgba(233,30,140,0.25);border-radius:16px;padding:24px;text-align:center;margin:24px 0;">
+        <p style="color:#fff;font-weight:bold;font-size:15px;margin:0 0 12px;">📱 Ou escaneie pra ouvir na hora</p>
+        <img src="${qrDataUri}" alt="QR code para ouvir a música" width="180" height="180" style="border-radius:12px;background:#fdf6ec;padding:8px;" />
+        <p style="color:#888;font-size:12px;margin:12px 0 0;">Aponte a câmera do celular pro código, ou <a href="${listenUrl}" style="color:#E91E8C;">clique aqui</a></p>
+      </div>`;
+}
+
+function buildHtml({ nomeDestinatario, downloadUrl, appUrl, qrDataUri, listenUrl }) {
   return `
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -51,6 +62,7 @@ function buildHtml({ nomeDestinatario, downloadUrl, appUrl }) {
         ⏰ <strong>Importante:</strong> Este link expira em 48 horas por segurança.
         Salve o arquivo no seu celular ou computador assim que baixar.
       </p>
+      ${buildQrSection({ qrDataUri, listenUrl })}
       <p>
         Compartilhe com <span class="name">${nomeDestinatario}</span> e cause aquela emoção inesquecível! 🥺❤️
       </p>
@@ -163,12 +175,22 @@ async function dispatchEmail({ to, subject, html, text, logLabel = '' }) {
 
 /**
  * Envia email com link de download da música.
+ * downloadToken (opcional) gera um QR code pra página de revelação
+ * (ouvir.html) -- nunca bloqueia o envio se a geração do QR falhar.
  */
-async function sendDownloadEmail({ to, nomeDestinatario, downloadUrl, audioUrl }) {
+async function sendDownloadEmail({ to, nomeDestinatario, downloadUrl, audioUrl, downloadToken }) {
   const appUrl  = process.env.APP_URL || 'https://suamusicaai.com.br';
   const subject = `🎵 Sua música para ${nomeDestinatario} está pronta para download!`;
-  const html    = buildHtml({ nomeDestinatario, downloadUrl, appUrl });
-  const text    = `Sua música para ${nomeDestinatario} está pronta!\n\nDownload: ${downloadUrl}\n\n⏰ Link expira em 48h. Salve o arquivo!\n\nEquipe SuaMúsicaAI`;
+
+  let qrDataUri = null;
+  let listenUrl = null;
+  if (downloadToken) {
+    listenUrl = `${appUrl}/ouvir.html?token=${downloadToken}`;
+    qrDataUri = await generateQrDataUri(listenUrl).catch(() => null);
+  }
+
+  const html = buildHtml({ nomeDestinatario, downloadUrl, appUrl, qrDataUri, listenUrl });
+  const text = `Sua música para ${nomeDestinatario} está pronta!\n\nDownload: ${downloadUrl}${listenUrl ? `\nOuvir na hora: ${listenUrl}` : ''}\n\n⏰ Link expira em 48h. Salve o arquivo!\n\nEquipe SuaMúsicaAI`;
   return dispatchEmail({ to, subject, html, text, logLabel: '' });
 }
 
