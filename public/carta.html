@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Carta de Amor com IA — SuaMúsicaAI</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0D0D1A;
+      color: #e2e2f0;
+      font-family: 'Inter', -apple-system, sans-serif;
+      min-height: 100vh;
+      padding: 32px 16px 60px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .wrap { width: 100%; max-width: 560px; }
+    .top-title { text-align: center; margin-bottom: 24px; }
+    .top-title h1 { font-size: 20px; font-weight: 700; }
+    .top-title p { font-size: 13px; color: #a09bb8; margin-top: 4px; }
+
+    .letter-card {
+      background: linear-gradient(160deg, #fdf6ec, #f7ecd9);
+      color: #3a2e22;
+      border-radius: 18px;
+      padding: 40px 32px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+      position: relative;
+      font-family: 'Playfair Display', serif;
+    }
+    .letter-seal { text-align: center; font-size: 32px; margin-bottom: 8px; }
+    .letter-to { font-size: 15px; font-weight: 700; margin-bottom: 18px; text-align: center; color: #7a3b2e; }
+    .letter-body {
+      font-size: 17px;
+      line-height: 1.85;
+      white-space: pre-wrap;
+      position: relative;
+    }
+    .letter-body.locked { max-height: 210px; overflow: hidden; }
+    .letter-fade {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 100px;
+      background: linear-gradient(to bottom, rgba(247,236,217,0), #f7ecd9 85%);
+    }
+
+    .loading, .error-box {
+      text-align: center;
+      padding: 60px 20px;
+      color: #a09bb8;
+    }
+    .spinner {
+      display: inline-block; width: 24px; height: 24px;
+      border: 3px solid rgba(255,255,255,0.2); border-top-color: #E91E8C;
+      border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 14px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .unlock-box {
+      margin-top: 20px;
+      background: #161628;
+      border: 1px solid #2a2a45;
+      border-radius: 16px;
+      padding: 22px;
+      text-align: center;
+    }
+    .unlock-box .price { font-size: 26px; font-weight: 800; color: #E91E8C; margin-bottom: 4px; }
+    .unlock-box p { font-size: 13px; color: #a09bb8; margin-bottom: 16px; }
+    .btn {
+      display: inline-block; width: 100%;
+      background: linear-gradient(135deg, #E91E8C, #7B2FBE);
+      color: #fff; padding: 15px; border-radius: 50px;
+      font-size: 15px; font-weight: 700; text-decoration: none; border: none; cursor: pointer;
+    }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-print {
+      background: transparent; border: 1px solid #2a2a45; color: #a09bb8;
+      margin-top: 20px; width: 100%;
+    }
+
+    @media print {
+      body { background: #fff; padding: 0; }
+      .top-title, .unlock-box, .btn-print { display: none !important; }
+      .letter-card { box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="top-title">
+    <h1>💌 Sua Carta de Amor</h1>
+    <p>Escrita pela IA com a sua história</p>
+  </div>
+
+  <div id="loadingBox" class="loading">
+    <div class="spinner"></div>
+    <p>Escrevendo sua carta...</p>
+  </div>
+
+  <div id="letterBox" style="display:none;">
+    <div class="letter-card">
+      <div class="letter-seal">💌</div>
+      <div class="letter-to" id="letterTo"></div>
+      <div class="letter-body" id="letterBody"></div>
+    </div>
+
+    <div class="unlock-box" id="unlockBox">
+      <div class="price">R$14,90</div>
+      <p>Desbloqueie a carta completa e receba pronta pra imprimir ou enviar junto com a música.</p>
+      <a class="btn" id="btnUnlock" href="#" target="_blank">💌 Desbloquear carta completa</a>
+    </div>
+
+    <button class="btn btn-print" id="btnPrint" style="display:none;" onclick="window.print()">🖨️ Imprimir / Salvar como PDF</button>
+  </div>
+
+  <div id="errorBox" class="error-box" style="display:none;">
+    <p>Não conseguimos gerar sua carta agora. Tente novamente em instantes ou fale com o suporte.</p>
+  </div>
+</div>
+
+<script>
+const BASE = window.location.origin;
+const params = new URLSearchParams(window.location.search);
+let _checkoutUrlCarta = '';
+
+fetch(`${BASE}/api/config`)
+  .then(r => r.json())
+  .then(cfg => { if (cfg.checkoutUrlCarta) _checkoutUrlCarta = cfg.checkoutUrlCarta; })
+  .catch(() => {});
+
+function showError() {
+  document.getElementById('loadingBox').style.display = 'none';
+  document.getElementById('errorBox').style.display = 'block';
+}
+
+function renderLetter(nome, text, paid, letterId) {
+  document.getElementById('loadingBox').style.display = 'none';
+  document.getElementById('letterBox').style.display = 'block';
+  document.getElementById('letterTo').textContent = 'Para ' + nome;
+
+  const bodyEl = document.getElementById('letterBody');
+  bodyEl.textContent = text;
+
+  if (paid) {
+    document.getElementById('unlockBox').style.display = 'none';
+    document.getElementById('btnPrint').style.display = 'block';
+  } else {
+    bodyEl.classList.add('locked');
+    const fade = document.createElement('div');
+    fade.className = 'letter-fade';
+    bodyEl.appendChild(fade);
+
+    const btn = document.getElementById('btnUnlock');
+    if (_checkoutUrlCarta) {
+      try {
+        const url = new URL(_checkoutUrlCarta);
+        url.searchParams.set('utm_campaign', letterId);
+        const email = params.get('email');
+        if (email) url.searchParams.set('email', email);
+        btn.href = url.toString();
+      } catch (_) { btn.href = _checkoutUrlCarta; }
+    } else {
+      btn.textContent = '💌 Em breve';
+      btn.style.pointerEvents = 'none';
+      btn.style.opacity = '0.5';
+    }
+  }
+}
+
+const existingLetterId = params.get('letterId');
+
+if (existingLetterId) {
+  // Retornando após compra (ou revisitando) -- busca status/conteúdo real
+  fetch(`${BASE}/api/letters/${existingLetterId}`)
+    .then(r => r.json())
+    .then(d => {
+      if (d.error) return showError();
+      renderLetter(d.nomeDestinatario, d.status === 'paid' ? d.fullText : d.preview, d.status === 'paid', d.letterId);
+    })
+    .catch(showError);
+} else {
+  // Primeira visita vinda do upsell -- gera a carta agora
+  const nome = params.get('nome');
+  const relacao = params.get('relacao');
+  const memoria = params.get('memoria');
+  const email = params.get('email');
+  const orderId = params.get('orderId');
+
+  if (!nome || !relacao || !memoria) {
+    showError();
+  } else {
+    fetch(`${BASE}/api/letters/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome, relacao, memoria, email, orderId }),
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (!d.success) return showError();
+        renderLetter(d.nomeDestinatario, d.preview, false, d.letterId);
+      })
+      .catch(showError);
+  }
+}
+</script>
+</body>
+</html>

@@ -33,7 +33,13 @@ router.post('/delivery-status', (req, res) => {
   if (order.status === 'complete') {
     return res.json({
       status: 'ready',
+      orderId: order.orderId,
       nomeDestinatario: order.formData?.nomeDestinatario || '',
+      relacao: order.formData?.relacao || '',
+      memoria: order.formData?.memoria || '',
+      genero: order.formData?.genero || '',
+      voz: order.formData?.voz || '',
+      emailEntrega: order.formData?.emailEntrega || order.emailEntrega || '',
       downloadToken: order.downloadToken,
       videoToken: order.videoToken || null,
     });

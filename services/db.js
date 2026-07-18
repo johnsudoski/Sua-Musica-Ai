@@ -54,6 +54,20 @@ async function initSchema() {
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS checkout_status TEXT;
     CREATE INDEX IF NOT EXISTS idx_orders_email ON orders(email);
 
+    CREATE TABLE IF NOT EXISTS letters (
+      id TEXT PRIMARY KEY,
+      order_id TEXT,
+      email TEXT,
+      nome_destinatario TEXT,
+      relacao TEXT,
+      memoria TEXT,
+      letter_text TEXT,
+      status TEXT NOT NULL DEFAULT 'preview',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+    CREATE INDEX IF NOT EXISTS idx_letters_email ON letters(email);
+
     CREATE TABLE IF NOT EXISTS sales (
       id SERIAL PRIMARY KEY,
       product_type TEXT NOT NULL,
@@ -151,6 +165,29 @@ async function updateVideoRequestStatus(requestId, status, extra = {}) {
     i++;
   }
   await pool.query(`UPDATE video_requests SET ${fields.join(', ')} WHERE request_id = $1`, values);
+}
+
+// ─── Cartas de Amor (upsell gerado por IA) ───
+
+async function createLetter({ letterId, orderId, email, nomeDestinatario, relacao, memoria, letterText }) {
+  await pool.query(
+    `INSERT INTO letters (id, order_id, email, nome_destinatario, relacao, memoria, letter_text)
+     VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+    [letterId, orderId || null, (email || '').toLowerCase().trim() || null, nomeDestinatario || null, relacao || null, memoria || null, letterText]
+  );
+}
+
+async function getLetter(letterId) {
+  const result = await pool.query(`SELECT * FROM letters WHERE id = $1`, [letterId]);
+  return result.rows[0] || null;
+}
+
+async function markLetterPaid(letterId, email) {
+  const result = await pool.query(
+    `UPDATE letters SET status = 'paid', email = COALESCE($2, email), updated_at = now() WHERE id = $1 RETURNING *`,
+    [letterId, (email || '').toLowerCase().trim() || null]
+  );
+  return result.rows[0] || null;
 }
 
 // ─── Pedidos (backup de segurança -- o Map em memória continua sendo a
@@ -345,6 +382,9 @@ module.exports = {
   updateOrderContact,
   getPendingLeadsWithPhone,
   getRecentOrderCount,
+  createLetter,
+  getLetter,
+  markLetterPaid,
   recordSale,
   getSalesSummary,
   getDailySales,

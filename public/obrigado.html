@@ -178,6 +178,33 @@
     .footer p   { font-size: 13px; color: var(--muted); }
     .footer a   { color: var(--pink); text-decoration: none; }
     .footer + p { margin-top: 8px; }
+
+    /* ── Upsells pós-compra ── */
+    #upsell-section { display: none; margin-top: 4px; }
+    .upsell-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 14px;
+    }
+    .upsell-card .upsell-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      padding: 3px 10px;
+      border-radius: 50px;
+      margin-bottom: 8px;
+      color: #fff;
+    }
+    .upsell-card.video .upsell-tag { background: var(--purple); }
+    .upsell-card.carta .upsell-tag { background: var(--pink); }
+    .upsell-card h4 { font-size: 16px; margin-bottom: 6px; }
+    .upsell-card p  { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 12px; }
+    .upsell-card .upsell-price { font-size: 13px; color: #fff; font-weight: 700; margin-bottom: 12px; }
+    .btn-upsell-video { background: var(--purple); }
+    .btn-upsell-carta { background: linear-gradient(135deg, var(--pink), var(--purple)); }
   </style>
 </head>
 <body>
@@ -229,6 +256,24 @@
       <p class="feedback" id="resend-feedback"></p>
     </div>
 
+    <!-- Upsells pós-compra -->
+    <div id="upsell-section">
+      <hr>
+      <div class="upsell-card video">
+        <span class="upsell-tag">🎬 MAIS PEDIDO</span>
+        <h4>Transforme em um Vídeo Homenagem</h4>
+        <p>Envie fotos e vídeos reais de vocês — a IA monta um vídeo completo sincronizado com a sua música. Suas fotos, mais essa música, viram uma memória que dá pra assistir.</p>
+        <div class="upsell-price">R$39,90</div>
+        <a class="btn btn-upsell-video" id="btn-upsell-video" href="#" target="_blank">🎬 Quero meu Vídeo Homenagem</a>
+      </div>
+      <div class="upsell-card carta">
+        <span class="upsell-tag">💌 NOVIDADE</span>
+        <h4>Carta de Amor escrita pela IA</h4>
+        <p>Além da música, receba uma carta de amor única, escrita com a mesma história que você contou — pronta pra imprimir ou enviar junto com a música.</p>
+        <a class="btn btn-upsell-carta" id="btn-upsell-carta" href="#" target="_blank">💌 Criar minha Carta de Amor</a>
+      </div>
+    </div>
+
   </div>
 
   <div class="footer">
@@ -241,6 +286,12 @@
 <script>
 const BASE = window.location.origin;
 let _emailUsado = '';
+let _videoServiceUrl = '';
+
+fetch(`${BASE}/api/config`)
+  .then(r => r.json())
+  .then(cfg => { if (cfg.videoServiceUrl) _videoServiceUrl = cfg.videoServiceUrl; })
+  .catch(() => {});
 
 async function checkStatus() {
   const email = document.getElementById('email-input').value.trim();
@@ -300,6 +351,32 @@ function mostrarDownload(d) {
   document.getElementById('email-section').style.display = 'none';
   document.getElementById('resend-section').style.display = 'block';
   setFeedback('', '');
+
+  // Upsells pós-compra
+  montarUpsells(d);
+}
+
+function montarUpsells(d) {
+  const params = new URLSearchParams({
+    nome: d.nomeDestinatario || '',
+    relacao: d.relacao || '',
+    memoria: d.memoria || '',
+    genero: d.genero || '',
+    voz: d.voz || '',
+    email: d.emailEntrega || _emailUsado || '',
+  });
+
+  const btnVideo = document.getElementById('btn-upsell-video');
+  if (_videoServiceUrl) {
+    btnVideo.href = _videoServiceUrl + '?' + params.toString();
+  } else {
+    btnVideo.style.display = 'none'; // serviço de vídeo não configurado
+  }
+
+  const btnCarta = document.getElementById('btn-upsell-carta');
+  btnCarta.href = `${BASE}/carta.html?` + params.toString() + (d.orderId ? `&orderId=${encodeURIComponent(d.orderId)}` : '');
+
+  document.getElementById('upsell-section').style.display = 'block';
 }
 
 async function resendEmail() {

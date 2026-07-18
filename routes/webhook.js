@@ -19,6 +19,7 @@ const PRODUCT_IDS = {
   mp3:   process.env.TICTO_MP3_PRODUCT   || 'OD11F0BEB',
   video: process.env.TICTO_VIDEO_PRODUCT || 'OD8AA1433',
   pack3: process.env.TICTO_PACK3_PRODUCT || 'O2B7D2FC2',
+  carta: process.env.TICTO_CARTA_PRODUCT || '', // ainda não existe -- criar produto na Ticto e setar essa env var
 };
 
 // ─── Valores dos produtos (pra reportar ao Meta via Conversions API) ───
@@ -26,12 +27,14 @@ const PRODUCT_VALUES = {
   mp3:   19.90,
   video: 39.90,
   pack3: 39.90,
+  carta: Number(process.env.CARTA_PRICE || 14.90),
 };
 
 // ─── Detecta qual produto foi comprado pelo payload Ticto ───
 function detectProductType(payload) {
   const offerId = payload?.sale?.offer_id || payload?.order?.offer_id || payload?.offer_id || '';
 
+  if (PRODUCT_IDS.carta && offerId === PRODUCT_IDS.carta) return 'carta';
   if (offerId === PRODUCT_IDS.pack3) return 'pack3';
   if (offerId === PRODUCT_IDS.video) return 'video';
   if (offerId === PRODUCT_IDS.mp3)   return 'mp3';
@@ -41,6 +44,7 @@ function detectProductType(payload) {
   // distingue entre eles. Esse fallback só é confiável pro mp3 (R$19,90);
   // pra video/pack3 dependemos do offer_id bater corretamente.
   const price = Number(payload?.sale?.price || payload?.order?.price || payload?.price || 0);
+  if (price > 0 && price < 1500) return 'carta'; // carta é o produto mais barato -- ajustar se CARTA_PRICE mudar
   if (price >= 3500) return 'pack3'; // R$35+ (ambíguo com video, ver nota acima)
   if (price >= 2500) return 'video'; // R$25-34 (só cai aqui se price < 35, não deveria acontecer pro video real)
   return 'mp3';
@@ -188,6 +192,9 @@ router.post('/ticto', async (req, res) => {
       await handlePack3Purchase(email);
     } else if (productType === 'video') {
       await handleVideoPurchase(campaignId, email);
+    } else if (productType === 'carta') {
+      // campaignId aqui carrega o letterId (setado como utm_campaign no link de checkout da carta.html)
+      await handleCartaPurchase(campaignId, email);
     } else if (campaignId) {
       triggerFullGeneration(campaignId, email, productType);
     } else if (email) {
@@ -204,6 +211,20 @@ router.post('/ticto', async (req, res) => {
     console.error('Ticto webhook: erro ao processar pagamento:', err.message);
   }
 });
+
+// ─── Carta de Amor: desbloqueia o texto completo (já foi gerado no preview) ───
+async function handleCartaPurchase(letterId, email) {
+  if (!letterId) {
+    console.warn('Carta: sem letterId (utm_campaign) — não é possível desbloquear');
+    return;
+  }
+  const letter = await db.markLetterPaid(letterId, email);
+  if (!letter) {
+    console.warn(`Carta: letterId ${letterId} não encontrado`);
+    return;
+  }
+  console.log(`Carta: desbloqueada para ${email} (letterId ${letterId})`);
+}
 
 // ─── Pacote 3 Músicas: concede créditos (a criação acontece na página de créditos) ───
 async function handlePack3Purchase(email) {

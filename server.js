@@ -24,6 +24,7 @@ const downloadRoutes = require('./routes/download');
 const deliveryRoutes = require('./routes/delivery');
 const creditsRoutes = require('./routes/credits');
 const adminRoutes = require('./routes/admin');
+const lettersRoutes = require('./routes/letters');
 const db = require('./services/db');
 
 const app = express();
@@ -84,6 +85,7 @@ app.get('/api/config', (req, res) => {
     checkoutUrlMp3:   process.env.TICTO_CHECKOUT_MP3   || 'https://checkout.ticto.app/OD11F0BEB',
     checkoutUrlVideo: process.env.TICTO_CHECKOUT_VIDEO || 'https://checkout.ticto.app/OD8AA1433',
     checkoutUrlPack3: process.env.TICTO_CHECKOUT_PACK3 || 'https://checkout.ticto.app/O2B7D2FC2',
+    checkoutUrlCarta: process.env.TICTO_CHECKOUT_CARTA || '',
     videoServiceUrl:   process.env.VIDEO_SERVICE_URL   || '',
     creditsServiceUrl: process.env.CREDITS_SERVICE_URL || '',
   });
@@ -106,6 +108,7 @@ app.use('/api', downloadRoutes);
 app.use('/api', deliveryRoutes);
 app.use('/api/credits', creditsRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/letters', lettersRoutes);
 
 // ─── Página de obrigado ───
 app.get('/obrigado', (req, res) => {
