@@ -25,6 +25,7 @@ const deliveryRoutes = require('./routes/delivery');
 const creditsRoutes = require('./routes/credits');
 const adminRoutes = require('./routes/admin');
 const lettersRoutes = require('./routes/letters');
+const reviewsRoutes = require('./routes/reviews');
 const db = require('./services/db');
 
 const app = express();
@@ -109,6 +110,7 @@ app.use('/api', deliveryRoutes);
 app.use('/api/credits', creditsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/letters', lettersRoutes);
+app.use('/api/reviews', reviewsRoutes);
 
 // ─── Página de obrigado ───
 app.get('/obrigado', (req, res) => {

@@ -22,7 +22,17 @@ function buildQrSection({ qrDataUri, listenUrl }) {
       </div>`;
 }
 
-function buildHtml({ nomeDestinatario, downloadUrl, appUrl, qrDataUri, listenUrl }) {
+function buildLetterSection({ letterUrl }) {
+  if (!letterUrl) return '';
+  return `
+      <div style="background:linear-gradient(135deg,rgba(233,30,140,0.12),rgba(123,47,190,0.12));border:1px solid rgba(233,30,140,0.3);border-radius:16px;padding:22px;text-align:center;margin:24px 0;">
+        <p style="color:#fff;font-weight:bold;font-size:15px;margin:0 0 6px;">💌 Bônus do Pacote Presente</p>
+        <p style="color:#ccc;font-size:13px;margin:0 0 14px;">Sua carta de amor escrita por IA já está pronta e liberada — sem custo extra.</p>
+        <a href="${letterUrl}" style="display:inline-block;background:#fff;color:#7B2FBE;text-decoration:none;padding:12px 26px;border-radius:50px;font-size:14px;font-weight:bold;">💌 Ler minha carta</a>
+      </div>`;
+}
+
+function buildHtml({ nomeDestinatario, downloadUrl, appUrl, qrDataUri, listenUrl, reviewUrl, letterUrl }) {
   return `
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -63,6 +73,7 @@ function buildHtml({ nomeDestinatario, downloadUrl, appUrl, qrDataUri, listenUrl
         Salve o arquivo no seu celular ou computador assim que baixar.
       </p>
       ${buildQrSection({ qrDataUri, listenUrl })}
+      ${buildLetterSection({ letterUrl })}
       <p>
         Compartilhe com <span class="name">${nomeDestinatario}</span> e cause aquela emoção inesquecível! 🥺❤️
       </p>
@@ -70,6 +81,7 @@ function buildHtml({ nomeDestinatario, downloadUrl, appUrl, qrDataUri, listenUrl
     </div>
     <div class="footer">
       <p>SuaMúsicaAI • O presente mais emocionante do Brasil 🇧🇷</p>
+      ${typeof reviewUrl !== 'undefined' && reviewUrl ? `<p style="margin-top:8px;"><a href="${reviewUrl}" style="color:#E91E8C;">⭐ Já ouviu? Conta pra gente como foi</a></p>` : ''}
       <p style="margin-top:8px;"><a href="${appUrl}" style="color:#E91E8C;">Criar outra música</a></p>
       <p style="margin-top:8px;">Dúvidas? <a href="mailto:suportesuamusicaai@gmail.com" style="color:#888;">suportesuamusicaai@gmail.com</a></p>
     </div>
@@ -178,19 +190,21 @@ async function dispatchEmail({ to, subject, html, text, logLabel = '' }) {
  * downloadToken (opcional) gera um QR code pra página de revelação
  * (ouvir.html) -- nunca bloqueia o envio se a geração do QR falhar.
  */
-async function sendDownloadEmail({ to, nomeDestinatario, downloadUrl, audioUrl, downloadToken }) {
+async function sendDownloadEmail({ to, nomeDestinatario, downloadUrl, audioUrl, downloadToken, letterUrl }) {
   const appUrl  = process.env.APP_URL || 'https://suamusicaai.com.br';
   const subject = `🎵 Sua música para ${nomeDestinatario} está pronta para download!`;
 
   let qrDataUri = null;
   let listenUrl = null;
+  let reviewUrl = null;
   if (downloadToken) {
     listenUrl = `${appUrl}/ouvir.html?token=${downloadToken}`;
+    reviewUrl = `${appUrl}/avaliar.html?token=${downloadToken}`;
     qrDataUri = await generateQrDataUri(listenUrl).catch(() => null);
   }
 
-  const html = buildHtml({ nomeDestinatario, downloadUrl, appUrl, qrDataUri, listenUrl });
-  const text = `Sua música para ${nomeDestinatario} está pronta!\n\nDownload: ${downloadUrl}${listenUrl ? `\nOuvir na hora: ${listenUrl}` : ''}\n\n⏰ Link expira em 48h. Salve o arquivo!\n\nEquipe SuaMúsicaAI`;
+  const html = buildHtml({ nomeDestinatario, downloadUrl, appUrl, qrDataUri, listenUrl, reviewUrl, letterUrl });
+  const text = `Sua música para ${nomeDestinatario} está pronta!\n\nDownload: ${downloadUrl}${listenUrl ? `\nOuvir na hora: ${listenUrl}` : ''}${letterUrl ? `\n💌 Bônus - sua carta de amor: ${letterUrl}` : ''}\n\n⏰ Link expira em 48h. Salve o arquivo!\n\nEquipe SuaMúsicaAI`;
   return dispatchEmail({ to, subject, html, text, logLabel: '' });
 }
 
@@ -242,6 +256,7 @@ function buildPack3Html({ nomeDestinatario, downloadUrls, appUrl }) {
     </div>
     <div class="footer">
       <p>SuaMúsicaAI • O presente mais emocionante do Brasil 🇧🇷</p>
+      ${typeof reviewUrl !== 'undefined' && reviewUrl ? `<p style="margin-top:8px;"><a href="${reviewUrl}" style="color:#E91E8C;">⭐ Já ouviu? Conta pra gente como foi</a></p>` : ''}
       <p style="margin-top:8px;"><a href="${appUrl}" style="color:#E91E8C;">Criar outra música</a></p>
       <p style="margin-top:8px;">Dúvidas? <a href="mailto:suportesuamusicaai@gmail.com" style="color:#888;">suportesuamusicaai@gmail.com</a></p>
     </div>
@@ -320,6 +335,7 @@ function buildVideoHtml({ nomeDestinatario, mp3DownloadUrl, videoDownloadUrl, ap
     </div>
     <div class="footer">
       <p>SuaMúsicaAI • O presente mais emocionante do Brasil 🇧🇷</p>
+      ${typeof reviewUrl !== 'undefined' && reviewUrl ? `<p style="margin-top:8px;"><a href="${reviewUrl}" style="color:#E91E8C;">⭐ Já ouviu? Conta pra gente como foi</a></p>` : ''}
       <p style="margin-top:8px;"><a href="${appUrl}" style="color:#E91E8C;">Criar outra música</a></p>
       <p style="margin-top:8px;">Dúvidas? <a href="mailto:suportesuamusicaai@gmail.com" style="color:#888;">suportesuamusicaai@gmail.com</a></p>
     </div>

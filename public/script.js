@@ -37,6 +37,66 @@ fetch(API_BASE + '/api/stats/live')
   })
   .catch(function() {});
 
+// ─── Depoimentos reais (nunca fabricados -- some se não houver volume ainda) ───
+fetch(API_BASE + '/api/reviews/approved?limit=6')
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var reviews = (data && data.reviews) || [];
+    if (reviews.length < 3) return; // pouco volume ainda -- melhor esconder que parecer vazio
+
+    var section = document.getElementById('storiesSection');
+    var grid = document.getElementById('storiesGrid');
+    var subtitle = document.getElementById('storiesSubtitle');
+    if (!section || !grid) return;
+
+    fetch(API_BASE + '/api/reviews/stats')
+      .then(function(r) { return r.json(); })
+      .then(function(stats) {
+        if (subtitle && stats.total) {
+          subtitle.textContent = stats.total + ' avaliações reais · média ' + stats.media.toFixed(1) + '★';
+        }
+      })
+      .catch(function() {});
+
+    reviews.forEach(function(review) {
+      var nome = review.nomeDestinatario || 'um presenteado';
+      var initial = nome.charAt(0).toUpperCase();
+      var stars = '★★★★★☆☆☆☆☆'.slice(5 - review.rating, 10 - review.rating);
+
+      var card = document.createElement('div');
+      card.className = 'story-card';
+
+      var header = document.createElement('div');
+      header.className = 'story-header';
+      var avatar = document.createElement('div');
+      avatar.className = 'story-avatar';
+      avatar.textContent = initial;
+      var nameBlock = document.createElement('div');
+      var nameEl = document.createElement('div');
+      nameEl.className = 'story-name';
+      nameEl.textContent = 'Presente para ' + nome;
+      nameBlock.appendChild(nameEl);
+      header.appendChild(avatar);
+      header.appendChild(nameBlock);
+
+      var starsEl = document.createElement('div');
+      starsEl.className = 'story-stars';
+      starsEl.textContent = stars;
+
+      var textEl = document.createElement('p');
+      textEl.className = 'story-text';
+      textEl.textContent = '"' + review.texto + '"'; // textContent -- nunca innerHTML com texto de usuário
+
+      card.appendChild(header);
+      card.appendChild(starsEl);
+      card.appendChild(textEl);
+      grid.appendChild(card);
+    });
+
+    section.style.display = 'block';
+  })
+  .catch(function() {});
+
 // ─── FAQ accordion ───
 document.querySelectorAll('.faq-q').forEach(function(btn) {
   btn.addEventListener('click', function() {
@@ -55,6 +115,153 @@ if (textarea && charCountEl) {
     charCountEl.textContent = textarea.value.length;
   });
 }
+
+// ─── Quiz multi-step (substitui o formulário estático) ───
+// Preenche os mesmos campos hidden que o submit handler abaixo já lê --
+// não precisa mudar a lógica de envio, só como os dados chegam até ela.
+(function initQuiz() {
+  var quizContainer = document.getElementById('quizContainer');
+  if (!quizContainer) return;
+
+  var steps = Array.prototype.slice.call(quizContainer.querySelectorAll('.quiz-step'));
+  var totalSteps = steps.length;
+  var currentStep = 1;
+  var progressBar = document.getElementById('quizProgressBar');
+  var stepNumEl = document.getElementById('quizStepNum');
+  var backBtn = document.getElementById('quizBackBtn');
+  var quizState = { comoConheceram: null, encanta: null };
+
+  window._quizContainer = quizContainer; // usado pelo submit handler pra esconder no loading
+
+  function goToStep(n) {
+    if (n < 1) n = 1;
+    if (n > totalSteps) n = totalSteps;
+    currentStep = n;
+    steps.forEach(function(s) { s.classList.toggle('active', Number(s.getAttribute('data-step')) === currentStep); });
+    if (progressBar) progressBar.style.width = ((currentStep / totalSteps) * 100) + '%';
+    if (stepNumEl) stepNumEl.textContent = currentStep;
+    if (backBtn) backBtn.style.display = currentStep === 1 ? 'none' : 'block';
+    requestAnimationFrame(function() {
+      var rect = quizContainer.getBoundingClientRect();
+      if (rect.top < 0 || rect.top > 220) {
+        var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        window.scrollTo({ top: scrollTop + rect.top - 100, behavior: 'smooth' });
+      }
+    });
+  }
+
+  if (backBtn) backBtn.addEventListener('click', function() { goToStep(currentStep - 1); });
+
+  // Step 1: relação (cartão único, avança sozinho)
+  var relacaoCards = quizContainer.querySelectorAll('#quizRelacao .quiz-card');
+  relacaoCards.forEach(function(card) {
+    card.addEventListener('click', function() {
+      relacaoCards.forEach(function(c) { c.classList.remove('selected'); });
+      card.classList.add('selected');
+      var relacaoInput = document.getElementById('relacao');
+      if (relacaoInput) relacaoInput.value = card.getAttribute('data-value');
+      setTimeout(function() { goToStep(2); }, 250);
+    });
+  });
+
+  // Step 2: nome
+  var nomeInput = document.getElementById('nomeDestinatario');
+  var nomeNextBtn = document.getElementById('qNomeNext');
+  if (nomeInput) {
+    nomeInput.addEventListener('input', function() {
+      if (nomeNextBtn) nomeNextBtn.disabled = nomeInput.value.trim().length < 2;
+    });
+    nomeInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && nomeInput.value.trim().length >= 2) { e.preventDefault(); goToStep(3); }
+    });
+  }
+  if (nomeNextBtn) nomeNextBtn.addEventListener('click', function() { if (!nomeNextBtn.disabled) goToStep(3); });
+
+  // Step 3: como se conheceram (chip único, avança sozinho)
+  var comoCards = quizContainer.querySelectorAll('#quizComoConheceram .quiz-chip');
+  comoCards.forEach(function(chip) {
+    chip.addEventListener('click', function() {
+      comoCards.forEach(function(c) { c.classList.remove('selected'); });
+      chip.classList.add('selected');
+      quizState.comoConheceram = chip.getAttribute('data-value');
+      setTimeout(function() { goToStep(4); }, 250);
+    });
+  });
+
+  // Step 4: o que encanta (chip) + detalhe opcional -> monta a "memoria" que o backend espera
+  var encantaCards = quizContainer.querySelectorAll('#quizEncanta .quiz-chip');
+  var detalheNextBtn = document.getElementById('qDetalheNext');
+  encantaCards.forEach(function(chip) {
+    chip.addEventListener('click', function() {
+      encantaCards.forEach(function(c) { c.classList.remove('selected'); });
+      chip.classList.add('selected');
+      quizState.encanta = chip.getAttribute('data-value');
+      if (detalheNextBtn) detalheNextBtn.disabled = false;
+    });
+  });
+  if (detalheNextBtn) {
+    detalheNextBtn.addEventListener('click', function() {
+      if (!quizState.encanta) return;
+      var detalheEl = document.getElementById('qDetalhe');
+      var nome = (document.getElementById('nomeDestinatario') || { value: '' }).value.trim();
+      var partes = [];
+      if (quizState.comoConheceram) partes.push('Nos conhecemos ' + quizState.comoConheceram + '.');
+      partes.push('O que mais me encanta n' + (nome ? 'o(a) ' + nome : 'ele/ela') + ' é ' + quizState.encanta + '.');
+      if (detalheEl && detalheEl.value.trim()) partes.push(detalheEl.value.trim());
+      var memoriaEl = document.getElementById('memoria');
+      if (memoriaEl) memoriaEl.value = partes.join(' ');
+      goToStep(5);
+    });
+  }
+
+  // Step 5: gênero (cartão único, avança sozinho)
+  var generoMap = { sertanejo: 'generoSertanejo', pop: 'generoPop', mpb: 'generoMpb', romantico: 'generoRomantico', pagode: 'generoPagode', gospel: 'generoGospel' };
+  var generoCards = quizContainer.querySelectorAll('#quizGenero .quiz-card');
+  generoCards.forEach(function(card) {
+    card.addEventListener('click', function() {
+      generoCards.forEach(function(c) { c.classList.remove('selected'); });
+      card.classList.add('selected');
+      var radioId = generoMap[card.getAttribute('data-value')];
+      var radio = radioId && document.getElementById(radioId);
+      if (radio) radio.checked = true;
+      setTimeout(function() { goToStep(6); }, 250);
+    });
+  });
+
+  // Step 6: voz (cartão único, avança sozinho)
+  var vozCards = quizContainer.querySelectorAll('#quizVoz .quiz-card');
+  vozCards.forEach(function(card) {
+    card.addEventListener('click', function() {
+      vozCards.forEach(function(c) { c.classList.remove('selected'); });
+      card.classList.add('selected');
+      var isMasc = card.getAttribute('data-value') === 'masculino';
+      var radio = document.getElementById(isMasc ? 'vozMasculino' : 'vozFeminino');
+      if (radio) radio.checked = true;
+      setTimeout(function() { goToStep(7); }, 250);
+    });
+  });
+
+  // Reseta o quiz pro estado inicial (usado pelo botão "criar para outra pessoa")
+  window._resetQuiz = function() {
+    quizState = { comoConheceram: null, encanta: null };
+    [relacaoCards, comoCards, encantaCards, generoCards, vozCards].forEach(function(group) {
+      group.forEach(function(el) { el.classList.remove('selected'); });
+    });
+    if (nomeInput) nomeInput.value = '';
+    if (nomeNextBtn) nomeNextBtn.disabled = true;
+    var detalheEl = document.getElementById('qDetalhe');
+    if (detalheEl) detalheEl.value = '';
+    if (detalheNextBtn) detalheNextBtn.disabled = true;
+    var relacaoInput = document.getElementById('relacao');
+    if (relacaoInput) relacaoInput.value = '';
+    var memoriaEl = document.getElementById('memoria');
+    if (memoriaEl) memoriaEl.value = '';
+    quizContainer.classList.remove('hidden');
+    goToStep(1);
+  };
+
+  goToStep(1);
+})();
 
 // ─── Estado ───
 var _orderId         = null;
@@ -78,6 +285,7 @@ var previewSection = document.getElementById('previewSection');
 var playBtn        = document.getElementById('playBtn');
 var buyBtnMp3      = document.getElementById('buyBtnMp3');
 var buyBtnVideo    = document.getElementById('buyBtnVideo');
+var buyBtnPack3    = document.getElementById('buyBtnPack3');
 var audioEl        = document.getElementById('previewAudio');
 
 // ─── Timer de carregamento (setTimeout recursivo) ───
@@ -213,6 +421,7 @@ function showPost30(nome) {
 function resetUI(msg) {
   stopLoadTimer();
   if (loadingSection) loadingSection.classList.add('hidden');
+  if (window._quizContainer) window._quizContainer.classList.remove('hidden');
   if (generateBtn) {
     generateBtn.disabled  = false;
     generateBtn.textContent = '🎧 Ouvir meu preview grátis agora';
@@ -275,6 +484,7 @@ if (form) {
 
     // UI: loading
     if (generateBtn) { generateBtn.disabled = true; generateBtn.textContent = '⏳ Criando sua música...'; }
+    if (window._quizContainer) window._quizContainer.classList.add('hidden');
     if (loadingSection) loadingSection.classList.remove('hidden');
     if (previewSection) previewSection.classList.add('hidden');
     var p30 = document.getElementById('post30Cta');
@@ -351,7 +561,22 @@ function openCheckout(productType) {
   }
 }
 
+// ─── Criar música para outra pessoa (volta ao quiz do zero) ───
+var btnCreateAnother = document.getElementById('btnCreateAnother');
+if (btnCreateAnother) {
+  btnCreateAnother.addEventListener('click', function() {
+    if (previewSection) previewSection.classList.add('hidden');
+    var p30 = document.getElementById('post30Cta');
+    if (p30) p30.style.display = 'none';
+    if (audioEl) { audioEl.pause(); audioEl.src = ''; }
+    _orderId = null;
+    _previewUrl = null;
+    if (typeof window._resetQuiz === 'function') window._resetQuiz();
+  });
+}
+
 if (buyBtnMp3) buyBtnMp3.addEventListener('click', function() { openCheckout('mp3'); });
+if (buyBtnPack3) buyBtnPack3.addEventListener('click', function() { openCheckout('pack3'); });
 
 // ─── Vídeo com Homenagem: antes do checkout, coleta briefing + upload numa página separada ───
 if (buyBtnVideo) buyBtnVideo.addEventListener('click', function() {

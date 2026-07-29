@@ -8,6 +8,7 @@ const express = require('express');
 const crypto = require('crypto');
 const db = require('../services/db');
 const { generateFull } = require('../services/suno');
+const { generateLoveLetter } = require('../services/letterAI');
 const emailService = require('../services/email');
 
 const router = express.Router();
@@ -81,6 +82,21 @@ router.post('/generate', async (req, res) => {
     return;
   }
 
+  // Bônus do Pacote Presente: carta de amor escrita por IA, já liberada
+  // (sem checkout separado -- vem inclusa em cada música do pacote de 3).
+  // Best-effort: se falhar (ex: ANTHROPIC_API_KEY fora do ar), a música
+  // já foi entregue normalmente, só o bônus fica de fora dessa entrega.
+  let letterUrl = null;
+  try {
+    const letterText = await generateLoveLetter({ nomeDestinatario, relacao, memoria });
+    const letterId = crypto.randomBytes(12).toString('hex');
+    await db.createLetter({ letterId, orderId, email: normalizedEmail, nomeDestinatario, relacao, memoria, letterText });
+    await db.markLetterPaid(letterId, normalizedEmail); // bônus: já entra liberada, sem paywall
+    letterUrl = `${process.env.APP_URL}/carta.html?letterId=${letterId}`;
+  } catch (letterErr) {
+    console.error(`[credits/generate] Bônus de carta falhou para orderId ${orderId} (música segue normal):`, letterErr.message);
+  }
+
   // Música já está pronta e salva -- uma falha de email aqui não deve
   // reverter o status nem devolver o crédito (o cliente já foi atendido,
   // só a notificação falhou).
@@ -91,8 +107,9 @@ router.post('/generate', async (req, res) => {
       downloadUrl: `${process.env.APP_URL}/api/download/${token}`,
       audioUrl,
       downloadToken: token,
+      letterUrl,
     });
-    console.log(`[credits/generate] Música gerada e email enviado para ${normalizedEmail} (orderId ${orderId})`);
+    console.log(`[credits/generate] Música gerada e email enviado para ${normalizedEmail} (orderId ${orderId})${letterUrl ? ' + carta bônus' : ''}`);
   } catch (emailErr) {
     console.error(`[credits/generate] Música pronta (orderId ${orderId}) mas falha ao enviar email:`, emailErr.message);
   }

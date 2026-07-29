@@ -444,8 +444,8 @@
 <!-- ══════════ PRODUTOS ══════════ -->
 <section class="products-section">
   <div class="container">
-    <h2>Dois formatos. Uma história inesquecível.</h2>
-    <p class="section-sub">Escolha após ouvir o preview — ou leve os dois</p>
+    <h2>Três formas. Uma história inesquecível.</h2>
+    <p class="section-sub">Escolha após ouvir o preview grátis</p>
     <div class="products-grid">
 
       <div class="product-card">
@@ -486,6 +486,26 @@
           <li>✓ Pronto pra postar no Instagram/TikTok</li>
           <li>✓ Formato perfeito para Stories</li>
           <li>✓ Download do MP3 + MP4</li>
+        </ul>
+        <a href="#criar" class="btn-product btn-product-primary">🎧 Ouvir preview grátis →</a>
+      </div>
+
+      <div class="product-card featured">
+        <div class="product-tag">💌 MELHOR CUSTO-BENEFÍCIO</div>
+        <span class="product-icon">🎁</span>
+        <h3>Pacote Presente</h3>
+        <p class="product-desc">
+          O mesmo preço do Vídeo avulso, mas rende <strong>3 músicas completas</strong> — pra namorada, mãe e melhor amiga, por exemplo.
+          Cada uma vem com uma <strong>carta de amor escrita por IA</strong> de bônus, sem custo extra.
+        </p>
+        <div class="product-price">R$39<small>,90</small></div>
+        <div class="product-speed">⚡ Créditos não expiram — crie quando quiser</div>
+        <ul class="product-features">
+          <li>✓ 3 músicas completas (3–4 min cada)</li>
+          <li>✓ 3 cartas de amor por IA — bônus incluso</li>
+          <li>✓ Uma pra cada pessoa especial da sua vida</li>
+          <li>✓ Pode postar nas redes sociais</li>
+          <li>✓ Download no email automaticamente</li>
         </ul>
         <a href="#criar" class="btn-product btn-product-primary">🎧 Ouvir preview grátis →</a>
       </div>
@@ -562,134 +582,140 @@
   </div>
 </section>
 
-<!-- ══════════ DEPOIMENTOS ══════════ -->
-<section class="stories-section">
+<!-- ══════════ DEPOIMENTOS (reais, carregados via /api/reviews/approved -- nunca fabricados) ══════════ -->
+<section class="stories-section" id="storiesSection" style="display:none;">
   <div class="container" style="max-width:780px;">
     <h2 style="text-align:center;">Histórias de quem usou</h2>
-    <p class="section-sub" style="text-align:center; margin-bottom:40px;">+2.400 pessoas já presentearam com uma música única</p>
-
-    <div class="story-card">
-      <div class="story-header">
-        <div class="story-avatar">M</div>
-        <div>
-          <div class="story-name">Mariana Souza</div>
-          <div class="story-location">📍 São Paulo, SP · Aniversário de casamento</div>
-        </div>
-      </div>
-      <div class="story-stars">★★★★★</div>
-      <p class="story-text">"Meu marido é impossível de presentear. Coloquei nossa história de como nos conhecemos na fila do banco, escolhi sertanejo que é o estilo dele... quando ele ouviu o nome DELE na música, segurou o choro por 10 segundos e depois desabou. Nunca vi ele chorar assim."</p>
-      <div class="story-highlight">🥹 "Esse foi o único presente que ele ainda fala, 4 meses depois."</div>
-    </div>
-
-    <div class="story-card">
-      <div class="story-header">
-        <div class="story-avatar">R</div>
-        <div>
-          <div class="story-name">Rafael Mendes</div>
-          <div class="story-location">📍 Belo Horizonte, MG · Dia das Mães</div>
-        </div>
-      </div>
-      <div class="story-stars">★★★★★</div>
-      <p class="story-text">"Peguei o vídeo com a letra. Mandei pro WhatsApp da minha mãe às 8h. Ela me ligou às 8h15 chorando. Disse que nunca tinha recebido um presente assim na vida. Ela ainda usa a música como toque e mostra pra todo mundo no bairro."</p>
-      <div class="story-highlight">📱 "Ela mostrou pra todos os vizinhos. Virou assunto na rua inteira."</div>
-    </div>
-
-    <div class="story-card">
-      <div class="story-header">
-        <div class="story-avatar">J</div>
-        <div>
-          <div class="story-name">Juliana Costa</div>
-          <div class="story-location">📍 Curitiba, PR · Aniversário da amiga</div>
-        </div>
-      </div>
-      <div class="story-stars">★★★★★</div>
-      <p class="story-text">"Fiz o vídeo com a letra pra minha amiga de 15 anos. Coloquei a história de quando nos conhecemos no primeiro dia de escola. A música ficou tão boa que eu chorei antes de mandar pra ela. Ela postou nos stories, explodiu nos directs — todo mundo queria saber como eu tinha conseguido."</p>
-      <div class="story-highlight">🎵 "Virou a música oficial da nossa amizade."</div>
-    </div>
+    <p class="section-sub" style="text-align:center; margin-bottom:40px;" id="storiesSubtitle">Avaliações reais de clientes</p>
+    <div id="storiesGrid"></div>
   </div>
 </section>
 
-<!-- ══════════ FORMULÁRIO ══════════ -->
+<!-- ══════════ QUIZ ══════════ -->
 <section class="form-section" id="criar">
   <div class="container">
     <div class="form-wrapper">
       <div class="form-header">
-        <h2>Crie agora a música dela</h2>
-        <p>Preencha, ouça <strong>40 segundos grátis</strong> e escolha como quer receber</p>
+        <h2>Vamos criar a música dela</h2>
+        <p>7 perguntinhas rápidas e você já ouve <strong>40 segundos grátis</strong></p>
       </div>
 
       <div class="freemium-banner">
         <div class="freemium-icon">🎁</div>
         <div>
           <h4>Preview grátis — sem cartão, sem cadastro</h4>
-          <p>Você ouve os primeiros 40 segundos de graça. Se amar, escolhe o MP3 (R$19,90) ou o Vídeo com letra (R$39,90). Se não amar, não paga nada.</p>
+          <p>Você ouve os primeiros 40 segundos de graça. Se amar, escolhe entre 3 opções — a partir de R$19,90. Se não amar, não paga nada.</p>
         </div>
       </div>
 
       <form id="musicForm">
 
-        <div class="form-group">
-          <label for="nomeDestinatario">Nome de quem vai receber 💝</label>
-          <input type="text" id="nomeDestinatario" name="nomeDestinatario"
-            placeholder="Ex: Ana, Pedro, Mãe, Vó Maria..."
-            required maxlength="50" />
-        </div>
+        <!-- Campos reais que o backend espera -- preenchidos pelo quiz, não digitados diretamente -->
+        <input type="hidden" id="relacao" name="relacao" />
+        <textarea id="memoria" name="memoria" maxlength="600" style="display:none;"></textarea>
+        <input type="radio" name="genero" value="sertanejo" id="generoSertanejo" style="display:none;" />
+        <input type="radio" name="genero" value="pop" id="generoPop" style="display:none;" />
+        <input type="radio" name="genero" value="mpb" id="generoMpb" style="display:none;" />
+        <input type="radio" name="genero" value="romantico" id="generoRomantico" style="display:none;" />
+        <input type="radio" name="genero" value="pagode" id="generoPagode" style="display:none;" />
+        <input type="radio" name="genero" value="gospel" id="generoGospel" style="display:none;" />
+        <input type="radio" name="voz" value="feminino" id="vozFeminino" checked style="display:none;" />
+        <input type="radio" name="voz" value="masculino" id="vozMasculino" style="display:none;" />
 
-        <div class="form-group">
-          <label for="relacao">Qual a relação de vocês?</label>
-          <select id="relacao" name="relacao" required>
-            <option value="">Escolha...</option>
-            <option value="namorado">💑 Namorado(a)</option>
-            <option value="esposo">💍 Esposo(a) / Marido / Esposa</option>
-            <option value="mae">🌸 Mãe</option>
-            <option value="pai">👨 Pai</option>
-            <option value="filho">👶 Filho(a)</option>
-            <option value="amigo">🤝 Amigo(a) especial</option>
-            <option value="avo">👴 Avó / Avô</option>
-            <option value="irmao">👫 Irmão(ã)</option>
-          </select>
-        </div>
+        <div id="quizContainer">
+          <div class="quiz-progress-track"><div class="quiz-progress-bar" id="quizProgressBar"></div></div>
+          <div class="quiz-step-counter">Pergunta <span id="quizStepNum">1</span> de 7</div>
 
-        <div class="form-group">
-          <label for="memoria">
-            Uma memória especial de vocês ✨
-            <small style="color:var(--text-muted);font-weight:400;display:block;margin-top:4px;">
-              Quanto mais detalhes, mais emocionante fica a música
-            </small>
-          </label>
-          <textarea id="memoria" name="memoria" rows="5"
-            placeholder="Ex: Quando ficamos horas conversando no telefone antes de nos conhecer. Ela sempre ri quando conto a mesma piada. Nossa primeira viagem foi pro litoral e ela ficou com medo das ondas..."
-            required maxlength="500"></textarea>
-          <div class="char-count"><span id="charCount">0</span>/500</div>
-        </div>
-
-        <div class="form-group">
-          <label>Estilo musical que ela mais gosta 🎸</label>
-          <div class="genre-grid">
-            <label class="genre-option"><input type="radio" name="genero" value="sertanejo" required /><span>🤠 Sertanejo</span></label>
-            <label class="genre-option"><input type="radio" name="genero" value="pop" /><span>🎤 Pop</span></label>
-            <label class="genre-option"><input type="radio" name="genero" value="mpb" /><span>🎸 MPB</span></label>
-            <label class="genre-option"><input type="radio" name="genero" value="romantico" /><span>💕 Romântico</span></label>
-            <label class="genre-option"><input type="radio" name="genero" value="pagode" /><span>🥁 Pagode</span></label>
-            <label class="genre-option"><input type="radio" name="genero" value="gospel" /><span>🙏 Gospel</span></label>
+          <!-- 1: relação -->
+          <div class="quiz-step active" data-step="1">
+            <h2 class="quiz-question">Pra quem é a música? 💝</h2>
+            <div class="quiz-cards" id="quizRelacao">
+              <button type="button" class="quiz-card" data-value="namorado" data-label="Namorado(a)"><span class="quiz-card-icon">💑</span><span>Namorado(a)</span></button>
+              <button type="button" class="quiz-card" data-value="esposo" data-label="Esposo(a)"><span class="quiz-card-icon">💍</span><span>Esposo(a)</span></button>
+              <button type="button" class="quiz-card" data-value="mae" data-label="Mãe"><span class="quiz-card-icon">🌸</span><span>Mãe</span></button>
+              <button type="button" class="quiz-card" data-value="pai" data-label="Pai"><span class="quiz-card-icon">👨</span><span>Pai</span></button>
+              <button type="button" class="quiz-card" data-value="filho" data-label="Filho(a)"><span class="quiz-card-icon">👶</span><span>Filho(a)</span></button>
+              <button type="button" class="quiz-card" data-value="amigo" data-label="Amigo(a)"><span class="quiz-card-icon">🤝</span><span>Amigo(a)</span></button>
+              <button type="button" class="quiz-card" data-value="avo" data-label="Avó/Avô"><span class="quiz-card-icon">👴</span><span>Avó/Avô</span></button>
+              <button type="button" class="quiz-card" data-value="irmao" data-label="Irmão(ã)"><span class="quiz-card-icon">👫</span><span>Irmão(ã)</span></button>
+            </div>
           </div>
-        </div>
 
-        <div class="form-group">
-          <label>Voz da música 🎙</label>
-          <div class="genre-grid" style="grid-template-columns: repeat(2, 1fr);">
-            <label class="genre-option"><input type="radio" name="voz" value="feminino" checked /><span>♀ Feminina</span></label>
-            <label class="genre-option"><input type="radio" name="voz" value="masculino" /><span>♂ Masculina</span></label>
+          <!-- 2: nome -->
+          <div class="quiz-step" data-step="2">
+            <h2 class="quiz-question">Qual o nome dela(e)? ✨</h2>
+            <input type="text" id="nomeDestinatario" class="quiz-input" placeholder="Ex: Ana, Pedro, Mãe, Vó Maria..." maxlength="50" autocomplete="off" />
+            <button type="button" class="quiz-next-btn" id="qNomeNext" disabled>Continuar →</button>
           </div>
-        </div>
 
-        <div class="form-group">
-          <label for="emailEntrega">Seu email para receber o arquivo 📧</label>
-          <input type="email" id="emailEntrega" name="emailEntrega"
-            placeholder="seu@email.com" required />
-          <small style="color:var(--text-muted);font-size:12px;margin-top:6px;display:block;">
-            🔒 Só usamos pra enviar sua música. Zero spam.
-          </small>
+          <!-- 3: como se conheceram -->
+          <div class="quiz-step" data-step="3">
+            <h2 class="quiz-question">Como vocês se conheceram? 🤔</h2>
+            <div class="quiz-chips" id="quizComoConheceram">
+              <button type="button" class="quiz-chip" data-value="na escola">🏫 Na escola</button>
+              <button type="button" class="quiz-chip" data-value="no trabalho">💼 No trabalho</button>
+              <button type="button" class="quiz-chip" data-value="pelas redes sociais">📱 Redes sociais</button>
+              <button type="button" class="quiz-chip" data-value="através de um amigo em comum">🤝 Amigo em comum</button>
+              <button type="button" class="quiz-chip" data-value="sempre esteve na família">👪 Sempre foi da família</button>
+              <button type="button" class="quiz-chip" data-value="de um jeito inesperado">✨ De um jeito inesperado</button>
+            </div>
+          </div>
+
+          <!-- 4: o que mais encanta + detalhe opcional -->
+          <div class="quiz-step" data-step="4">
+            <h2 class="quiz-question">O que mais te encanta nela(e)? 🥹</h2>
+            <div class="quiz-chips" id="quizEncanta">
+              <button type="button" class="quiz-chip" data-value="o sorriso">😊 O sorriso</button>
+              <button type="button" class="quiz-chip" data-value="a força">💪 A força</button>
+              <button type="button" class="quiz-chip" data-value="o jeito engraçado">😂 O jeito engraçado</button>
+              <button type="button" class="quiz-chip" data-value="a dedicação">🙏 A dedicação</button>
+              <button type="button" class="quiz-chip" data-value="o carinho">🤗 O carinho</button>
+              <button type="button" class="quiz-chip" data-value="tudo, sem exceção">💕 Tudo nela(e)</button>
+            </div>
+            <label class="quiz-detail-label">Quer contar mais um detalhe? (opcional, mas deixa a letra mais única)</label>
+            <textarea id="qDetalhe" class="quiz-textarea" maxlength="400" placeholder="Ex: nossa primeira viagem foi pro litoral e ela ficou com medo das ondas..."></textarea>
+            <button type="button" class="quiz-next-btn" id="qDetalheNext" disabled>Continuar →</button>
+          </div>
+
+          <!-- 5: estilo -->
+          <div class="quiz-step" data-step="5">
+            <h2 class="quiz-question">Qual estilo ela(e) mais ama? 🎸</h2>
+            <div class="quiz-cards" id="quizGenero">
+              <button type="button" class="quiz-card" data-value="sertanejo"><span class="quiz-card-icon">🤠</span><span>Sertanejo</span></button>
+              <button type="button" class="quiz-card" data-value="pop"><span class="quiz-card-icon">🎤</span><span>Pop</span></button>
+              <button type="button" class="quiz-card" data-value="mpb"><span class="quiz-card-icon">🎸</span><span>MPB</span></button>
+              <button type="button" class="quiz-card" data-value="romantico"><span class="quiz-card-icon">💕</span><span>Romântico</span></button>
+              <button type="button" class="quiz-card" data-value="pagode"><span class="quiz-card-icon">🥁</span><span>Pagode</span></button>
+              <button type="button" class="quiz-card" data-value="gospel"><span class="quiz-card-icon">🙏</span><span>Gospel</span></button>
+            </div>
+          </div>
+
+          <!-- 6: voz -->
+          <div class="quiz-step" data-step="6">
+            <h2 class="quiz-question">Voz da música 🎙</h2>
+            <div class="quiz-cards quiz-cards-2col" id="quizVoz">
+              <button type="button" class="quiz-card" data-value="feminino"><span class="quiz-card-icon">♀</span><span>Feminina</span></button>
+              <button type="button" class="quiz-card" data-value="masculino"><span class="quiz-card-icon">♂</span><span>Masculina</span></button>
+            </div>
+          </div>
+
+          <!-- 7: email + submit -->
+          <div class="quiz-step" data-step="7">
+            <h2 class="quiz-question">Quase lá! Onde você recebe a música? 📧</h2>
+            <p class="quiz-subtext">Preview grátis primeiro. O arquivo completo só se você amar.</p>
+            <input type="email" id="emailEntrega" class="quiz-input" placeholder="seu@email.com" autocomplete="off" required />
+            <small class="quiz-privacy">🔒 Só usamos pra enviar sua música. Zero spam.</small>
+            <button type="submit" id="generateBtn" class="btn-generate-xl">
+              🎧 Ouvir meu preview grátis agora
+            </button>
+            <div class="micro-copy">
+              <span>✅ Sem cadastro</span>
+              <span>✅ Preview grátis</span>
+              <span>✅ Só paga se amar</span>
+            </div>
+          </div>
+
+          <button type="button" class="quiz-back-btn" id="quizBackBtn" style="display:none;">← Voltar</button>
         </div>
 
         <!-- LOADING -->
@@ -719,17 +745,21 @@
 
           <div class="preview-cta">
             <p style="font-size:15px;font-weight:600;margin-bottom:14px;">Amou? Escolha como quer receber:</p>
-            <div class="preview-options">
+            <div class="preview-options preview-options-3">
               <button type="button" id="buyBtnMp3" class="btn-buy-mp3">
                 🎵 MP3 Completo<br>
                 <span style="font-size:12px;font-weight:400;opacity:0.85;">3–4 min · R$19,90</span>
               </button>
-              <button type="button" id="buyBtnVideo" class="btn-buy-video">
-                🎬 MP3 + Vídeo com Letra<br>
+              <button type="button" id="buyBtnVideo" class="btn-buy-video btn-buy-featured">
+                🔥 Mais escolhido<br>🎬 MP3 + Vídeo com Letra<br>
                 <span style="font-size:12px;font-weight:400;opacity:0.85;">Arquivo MP4 animado · R$39,90</span>
               </button>
+              <button type="button" id="buyBtnPack3" class="btn-buy-video">
+                💌 Pacote Presente<br>🎵×3 + Carta de Amor<br>
+                <span style="font-size:12px;font-weight:400;opacity:0.85;">3 músicas + 3 cartas · R$39,90</span>
+              </button>
             </div>
-            <p class="preview-note">PIX ou cartão · Entrega no email · Aprovação em minutos</p>
+            <p class="preview-note">PIX ou cartão · Entrega no email · Aprovação em minutos · Garantia total até a entrega</p>
           </div>
 
           <!-- CTA pós-30s (aparece depois que o preview termina) -->
@@ -740,26 +770,23 @@
             <p style="font-size:14px;color:#f9a8d4;margin:0 0 16px;">
               Essa foi só os primeiros 40 segundos. A música completa tem 3–4 minutos com a história toda de vocês.
             </p>
-            <div class="preview-options">
-              <button type="button" onclick="openCheckout('mp3')" class="btn-buy-mp3" style="animation:pulse 2s ease-in-out infinite;">
-                🎵 Quero o MP3 completo<br>
+            <div class="preview-options preview-options-3">
+              <button type="button" onclick="openCheckout('mp3')" class="btn-buy-mp3">
+                🎵 Só o MP3<br>
                 <span style="font-size:12px;font-weight:400;opacity:0.85;">3–4 min · R$19,90</span>
               </button>
-              <button type="button" onclick="openCheckout('video')" class="btn-buy-video">
-                🎬 Quero com Vídeo + Letra<br>
+              <button type="button" onclick="openCheckout('video')" class="btn-buy-video btn-buy-featured" style="animation:pulse 2s ease-in-out infinite;">
+                🔥 MP3 + Vídeo + Letra<br>
                 <span style="font-size:12px;font-weight:400;opacity:0.85;">MP4 animado · R$39,90</span>
+              </button>
+              <button type="button" onclick="openCheckout('pack3')" class="btn-buy-video">
+                💌 Pacote Presente (3 músicas)<br>
+                <span style="font-size:12px;font-weight:400;opacity:0.85;">+ 3 cartas de amor de bônus · R$39,90</span>
               </button>
             </div>
           </div>
-        </div>
 
-        <button type="submit" id="generateBtn" class="btn-generate-xl">
-          🎧 Ouvir meu preview grátis agora
-        </button>
-        <div class="micro-copy">
-          <span>✅ Sem cadastro</span>
-          <span>✅ Preview grátis</span>
-          <span>✅ Só paga se amar</span>
+          <button type="button" id="btnCreateAnother" class="quiz-back-btn" style="margin-top:20px;display:block;width:100%;text-align:center;">🎧 Criar música para outra pessoa</button>
         </div>
       </form>
 
@@ -800,6 +827,10 @@
         <div class="obj-q">📋 "Posso postar nas redes?"</div>
         <div class="obj-a">Sim! Direitos de uso pessoal e redes sociais incluídos. Instagram, TikTok, WhatsApp, YouTube — pode postar em todos.</div>
       </div>
+      <div class="obj-card">
+        <div class="obj-q">🤝 "E se eu pagar e a versão completa vier diferente do preview?"</div>
+        <div class="obj-a">Garantimos a versão completa também: se a música final não ficar boa, devolvemos 100% do valor, sem burocracia. O risco é todo nosso, não seu.</div>
+      </div>
     </div>
   </div>
 </section>
@@ -824,10 +855,9 @@
       </div>
 
       <div class="price-card popular">
-        <div class="popular-badge">🔥 Mais popular</div>
+        <div class="popular-badge">🔥 Mais escolhido</div>
         <h3>🎬 Vídeo com Letra</h3>
         <div class="price">R$39<span class="cents">,90</span></div>
-        <div class="price-old">de R$79,90</div>
         <ul>
           <li>✓ <strong>MP3 completo</strong> da sua música</li>
           <li>✓ <strong>Vídeo MP4 animado</strong> com a letra</li>
@@ -838,13 +868,27 @@
         <a href="#criar" class="btn-price">Criar e ouvir grátis</a>
       </div>
 
+      <div class="price-card premium">
+        <div class="popular-badge" style="background:linear-gradient(135deg,#7B2FBE,#3D0E6B);">💌 Melhor custo-benefício</div>
+        <h3>🎁 Pacote Presente</h3>
+        <div class="price">R$39<span class="cents">,90</span></div>
+        <div class="price-bonus">Mesmo preço do Vídeo avulso — mas rende <strong>3 músicas completas</strong></div>
+        <ul>
+          <li>✓ <strong>3 músicas completas</strong> (use quando quiser, uma de cada vez)</li>
+          <li>✓ <strong>3 cartas de amor escritas por IA</strong> de bônus — grátis</li>
+          <li>✓ Perfeita pra presentear mais de uma pessoa especial</li>
+          <li>✓ Créditos não expiram — cria quando quiser</li>
+        </ul>
+        <a href="#criar" class="btn-price">Criar e ouvir grátis</a>
+      </div>
+
     </div>
 
     <div class="guarantee">
       <span class="guarantee-icon">🛡️</span>
       <div>
-        <strong>Ouça antes de pagar — sem risco</strong>
-        <p>Todo pedido começa com um preview grátis de 40 segundos. Você só paga se amar o que ouviu. Se não gostar, não cobra nada, sem burocracia.</p>
+        <strong>Garantia dupla — antes E depois da compra</strong>
+        <p>Todo pedido começa com um preview grátis de 40 segundos: você só compra se amar o que ouviu. E depois de comprar, se a versão completa não ficar tão boa quanto o preview, devolvemos 100% do valor. Sem burocracia, sem letra miúda.</p>
       </div>
     </div>
   </div>
@@ -860,8 +904,12 @@
         <div class="faq-a">É 100% grátis. Você não precisa colocar cartão nem cadastrar. Preencheu o formulário → a IA compõe → você ouve os primeiros 40 segundos de graça. Só depois de ouvir você decide se quer comprar.</div>
       </div>
       <div class="faq-item">
-        <button class="faq-q">Qual a diferença do MP3 para o Vídeo com Letra? <span>+</span></button>
-        <div class="faq-a">O MP3 Completo (R$19,90) entrega o áudio da música no seu email. O Vídeo com Letra (R$39,90) entrega o MP3 <strong>mais</strong> um vídeo MP4 animado com a letra aparecendo, fundo escuro e o nome de quem você ama — pronto para mandar no WhatsApp, Stories do Instagram ou TikTok.</div>
+        <button class="faq-q">Qual a diferença entre MP3, Vídeo e Pacote Presente? <span>+</span></button>
+        <div class="faq-a">O MP3 Completo (R$19,90) entrega o áudio da música no seu email. O Vídeo com Letra (R$39,90) entrega o MP3 <strong>mais</strong> um vídeo MP4 animado com a letra aparecendo, pronto para WhatsApp, Stories e TikTok. O Pacote Presente (R$39,90 — mesmo preço do Vídeo) entrega <strong>3 músicas completas</strong>, cada uma com sua carta de amor por IA de bônus — ideal se você quer presentear mais de uma pessoa.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Como funciona a carta de amor de bônus do Pacote Presente? <span>+</span></button>
+        <div class="faq-a">Cada uma das 3 músicas do Pacote Presente vem com uma carta de amor escrita por IA a partir da mesma história que você contou — sem custo extra. Você recebe o link por email junto com a música, já liberada pra ler, imprimir ou enviar.</div>
       </div>
       <div class="faq-item">
         <button class="faq-q">A letra vai ter o nome dela de verdade? <span>+</span></button>

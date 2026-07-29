@@ -54,6 +54,18 @@ async function initSchema() {
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS checkout_status TEXT;
     CREATE INDEX IF NOT EXISTS idx_orders_email ON orders(email);
 
+    CREATE TABLE IF NOT EXISTS reviews (
+      id SERIAL PRIMARY KEY,
+      order_id TEXT,
+      email TEXT,
+      nome_destinatario TEXT,
+      rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+      texto TEXT,
+      status TEXT NOT NULL DEFAULT 'pending',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+    CREATE INDEX IF NOT EXISTS idx_reviews_status ON reviews(status);
+
     CREATE TABLE IF NOT EXISTS letters (
       id TEXT PRIMARY KEY,
       order_id TEXT,
@@ -165,6 +177,39 @@ async function updateVideoRequestStatus(requestId, status, extra = {}) {
     i++;
   }
   await pool.query(`UPDATE video_requests SET ${fields.join(', ')} WHERE request_id = $1`, values);
+}
+
+// ─── Avaliações reais de clientes ───
+
+async function createReview({ orderId, email, nomeDestinatario, rating, texto }) {
+  const result = await pool.query(
+    `INSERT INTO reviews (order_id, email, nome_destinatario, rating, texto)
+     VALUES ($1,$2,$3,$4,$5) RETURNING id`,
+    [orderId || null, (email || '').toLowerCase().trim() || null, nomeDestinatario || null, rating, texto || null]
+  );
+  return result.rows[0].id;
+}
+
+async function hasReviewForOrder(orderId) {
+  const result = await pool.query(`SELECT id FROM reviews WHERE order_id = $1 LIMIT 1`, [orderId]);
+  return result.rows.length > 0;
+}
+
+async function getApprovedReviews(limit = 20) {
+  const result = await pool.query(
+    `SELECT nome_destinatario, rating, texto, created_at FROM reviews
+     WHERE status = 'approved' ORDER BY created_at DESC LIMIT $1`,
+    [limit]
+  );
+  return result.rows;
+}
+
+async function getReviewStats() {
+  const result = await pool.query(
+    `SELECT COUNT(*)::int AS total, AVG(rating)::numeric(2,1) AS media
+     FROM reviews WHERE status IN ('approved','pending')`
+  );
+  return result.rows[0];
 }
 
 // ─── Cartas de Amor (upsell gerado por IA) ───
@@ -385,6 +430,10 @@ module.exports = {
   createLetter,
   getLetter,
   markLetterPaid,
+  createReview,
+  hasReviewForOrder,
+  getApprovedReviews,
+  getReviewStats,
   recordSale,
   getSalesSummary,
   getDailySales,
