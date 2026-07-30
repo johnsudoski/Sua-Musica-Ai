@@ -418,4 +418,75 @@ async function sendCreditsEmail({ to, balance, creditsUrl }) {
   return dispatchEmail({ to, subject, html, text, logLabel: 'créditos' });
 }
 
-module.exports = { sendDownloadEmail, sendPack3Email, sendVideoEmail, sendCreditsEmail };
+// ── Template: Recuperação de preview abandonado ──
+function buildAbandonedPreviewHtml({ nomeDestinatario, checkoutUrl, appUrl }) {
+  return `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sua música pra ${nomeDestinatario} ainda tá esperando 🎵</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0D0D1A; color: #fff; margin: 0; padding: 20px; }
+    .container { max-width: 580px; margin: 0 auto; background: #161628; border-radius: 16px; overflow: hidden; }
+    .header { background: linear-gradient(135deg, #E91E8C, #7B2FBE); padding: 40px 30px; text-align: center; }
+    .header h1 { margin: 0; font-size: 26px; color: #fff; }
+    .body { padding: 32px 30px; }
+    .body p { color: #ccc; line-height: 1.6; margin: 0 0 16px; }
+    .name { color: #E91E8C; font-weight: bold; }
+    .btn { display: block; background: linear-gradient(135deg, #E91E8C, #7B2FBE); color: #fff !important; text-decoration: none; text-align: center; padding: 16px 32px; border-radius: 50px; font-size: 18px; font-weight: bold; margin: 24px 0; }
+    .price-note { text-align: center; font-size: 13px; color: #888; margin-top: -12px; }
+    .guarantee { background: #1c1830; border: 1px solid rgba(233,30,140,0.25); border-radius: 12px; padding: 16px 18px; font-size: 13px; color: #ccc; margin-top: 20px; }
+    .footer { padding: 24px 30px; border-top: 1px solid #2a2a45; text-align: center; }
+    .footer p { color: #555; font-size: 13px; margin: 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎵 Ainda dá tempo</h1>
+    </div>
+    <div class="body">
+      <p>Olá! 💕</p>
+      <p>
+        Você ouviu o preview da música pra <span class="name">${nomeDestinatario}</span> e não finalizou.
+        Ela continua exatamente do jeito que você criou — com o nome e a história de vocês.
+      </p>
+      <a href="${checkoutUrl}" class="btn">🎵 Finalizar minha música — R$19,90</a>
+      <p class="price-note">PIX ou cartão · Entrega automática no seu email</p>
+      <div class="guarantee">
+        🛡️ Se a versão completa não ficar tão boa quanto o preview, devolvemos 100% do valor. Sem burocracia.
+      </div>
+      <p style="margin-top:24px;">Com carinho,<br><strong>Equipe SuaMúsicaAI</strong></p>
+    </div>
+    <div class="footer">
+      <p>SuaMúsicaAI • O presente mais emocionante do Brasil 🇧🇷</p>
+      <p style="margin-top:8px;"><a href="${appUrl}" style="color:#E91E8C;">Criar outra música</a></p>
+      <p style="margin-top:8px;">Dúvidas? <a href="mailto:suportesuamusicaai@gmail.com" style="color:#888;">suportesuamusicaai@gmail.com</a></p>
+    </div>
+  </div>
+</body>
+</html>`.trim();
+}
+
+/**
+ * Envia lembrete pra quem ouviu o preview e não comprou. Link de checkout
+ * vai direto pro Ticto com orderId/email pré-preenchidos (mesmo mecanismo
+ * do openCheckout() do frontend) -- não depende do preview em memória no
+ * navegador nem do arquivo de preview ainda existir em disco.
+ */
+async function sendAbandonedPreviewEmail({ to, nomeDestinatario, orderId }) {
+  const appUrl = process.env.APP_URL || 'https://suamusicaai.com.br';
+  const checkoutBase = process.env.TICTO_CHECKOUT_MP3 || 'https://checkout.ticto.app/OD11F0BEB';
+  const checkoutUrl = new URL(checkoutBase);
+  checkoutUrl.searchParams.set('utm_campaign', orderId);
+  checkoutUrl.searchParams.set('email', to);
+
+  const subject = `🎵 Sua música pra ${nomeDestinatario} ainda tá esperando`;
+  const html = buildAbandonedPreviewHtml({ nomeDestinatario, checkoutUrl: checkoutUrl.toString(), appUrl });
+  const text = `Você ouviu o preview da música pra ${nomeDestinatario} e não finalizou.\n\nFinalizar agora (R$19,90): ${checkoutUrl.toString()}\n\nSe a versão completa não ficar tão boa quanto o preview, devolvemos 100% do valor.\n\nEquipe SuaMúsicaAI`;
+  return dispatchEmail({ to, subject, html, text, logLabel: 'recuperação de preview' });
+}
+
+module.exports = { sendDownloadEmail, sendPack3Email, sendVideoEmail, sendCreditsEmail, sendAbandonedPreviewEmail };

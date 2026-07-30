@@ -52,7 +52,9 @@ async function initSchema() {
     );
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS phone TEXT;
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS checkout_status TEXT;
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS recovery_email_sent_at TIMESTAMPTZ;
     CREATE INDEX IF NOT EXISTS idx_orders_email ON orders(email);
+    CREATE INDEX IF NOT EXISTS idx_orders_status_created ON orders(status, created_at);
 
     CREATE TABLE IF NOT EXISTS reviews (
       id SERIAL PRIMARY KEY,
@@ -338,6 +340,30 @@ async function getOrderByEmail(email, status) {
   return result.rows[0] || null;
 }
 
+// ─── Recuperação de preview abandonado ───
+// Pedidos que ouviram o preview (status='preview_ready') e nunca avançaram
+// pra compra (status só muda quando o pagamento é confirmado). Janela
+// [minHours, maxDays] evita mandar recuperação cedo demais (pessoa ainda
+// decidindo) ou tarde demais (lembrança já esfriou / parece spam).
+async function getAbandonedPreviews({ minHours = 2, maxDays = 3 } = {}) {
+  const result = await pool.query(
+    `SELECT order_id, email, form_data, created_at FROM orders
+     WHERE status = 'preview_ready'
+       AND recovery_email_sent_at IS NULL
+       AND email IS NOT NULL AND email <> ''
+       AND created_at <= now() - ($1 || ' hours')::interval
+       AND created_at >= now() - ($2 || ' days')::interval
+     ORDER BY created_at ASC
+     LIMIT 200`,
+    [minHours, maxDays]
+  );
+  return result.rows;
+}
+
+async function markRecoveryEmailSent(orderId) {
+  await pool.query(`UPDATE orders SET recovery_email_sent_at = now() WHERE order_id = $1`, [orderId]);
+}
+
 // Reconstrói o formato usado por global.pendingOrders a partir da linha do Postgres
 function orderRowToMemoryFormat(row) {
   return {
@@ -423,6 +449,8 @@ module.exports = {
   saveOrder,
   getOrder,
   getOrderByEmail,
+  getAbandonedPreviews,
+  markRecoveryEmailSent,
   orderRowToMemoryFormat,
   updateOrderContact,
   getPendingLeadsWithPhone,

@@ -27,6 +27,7 @@ const adminRoutes = require('./routes/admin');
 const lettersRoutes = require('./routes/letters');
 const reviewsRoutes = require('./routes/reviews');
 const db = require('./services/db');
+const { runAbandonedPreviewRecovery } = require('./services/recovery');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -144,5 +145,17 @@ app.listen(PORT, () => {
   console.log(`   Suno API: ${process.env.APIFRAME_API_KEY ? '✓ configurada' : '✗ faltando APIFRAME_API_KEY'}`);
   console.log(`   Kiwify:   ${process.env.KIWIFY_WEBHOOK_SECRET ? '✓ configurado' : '✗ faltando KIWIFY_WEBHOOK_SECRET'}\n`);
 });
+
+// ─── Recuperação de preview abandonado ───
+// Roda em intervalo fixo (não é cron externo, é o próprio processo que já
+// fica de pé o tempo todo). Primeira varredura logo após o boot, depois
+// repete a cada 30 minutos.
+const RECOVERY_INTERVAL_MS = 30 * 60 * 1000;
+setTimeout(() => {
+  runAbandonedPreviewRecovery().catch(err => console.error('[recovery] erro na varredura inicial:', err.message));
+}, 2 * 60 * 1000);
+setInterval(() => {
+  runAbandonedPreviewRecovery().catch(err => console.error('[recovery] erro na varredura periódica:', err.message));
+}, RECOVERY_INTERVAL_MS);
 
 module.exports = app;
