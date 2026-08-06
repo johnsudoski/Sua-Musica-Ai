@@ -605,4 +605,46 @@ async function sendBumpPlaylistEmail({ to, genero }) {
   return dispatchEmail({ to, subject, html, text, logLabel: 'bump playlist' });
 }
 
-module.exports = { sendDownloadEmail, sendPack3Email, sendVideoEmail, sendCreditsEmail, sendAbandonedPreviewEmail, sendBumpInstrumentalEmail, sendBumpCartasEmail, sendBumpPlaylistEmail };
+/**
+ * Upsell 1: Álbum Completo -- entrega as 4 músicas extras + capa + linha
+ * do tempo + behind the scenes. Qualquer peça que falhou na geração
+ * simplesmente não aparece no email (nunca promete o que não gerou).
+ */
+async function sendUpsellAlbumEmail({ to, nomeDestinatario, songs, coverUrl, timelineUrl, behindTheScenes }) {
+  const appUrl = process.env.APP_URL || 'https://suamusicaai.com.br';
+  const subject = `🎼 Seu Álbum Completo para ${nomeDestinatario} está pronto`;
+  const introHtml = `<p>Olá! 💕</p><p>Seu <strong>Álbum Completo</strong> está pronto -- as músicas extras contando outros capítulos da história com <strong>${nomeDestinatario}</strong>.</p>`;
+
+  const songsHtml = (songs || []).map((s, i) => `
+    <p style="margin:14px 0 4px;"><strong>🎵 Música ${i + 2}: ${s.tema}</strong></p>
+    <a href="${s.downloadUrl}" class="btn" style="margin:6px 0 12px;">⬇️ Baixar</a>`).join('');
+
+  const coverHtml = coverUrl ? `<p style="margin-top:20px;"><strong>🎨 Capa do álbum:</strong></p><img src="${coverUrl}" alt="Capa do álbum" style="width:100%;max-width:300px;border-radius:12px;margin-top:8px;" />` : '';
+  const timelineHtml = timelineUrl ? `<p style="margin-top:20px;"><strong>📅 Linha do tempo:</strong></p><img src="${timelineUrl}" alt="Linha do tempo" style="width:100%;max-width:300px;border-radius:12px;margin-top:8px;" />` : '';
+  const btsHtml = behindTheScenes ? `<p style="margin-top:20px;"><strong>📖 Behind the Scenes:</strong></p><p style="white-space:pre-wrap;font-size:13.5px;color:#ccc;background:#1c1830;border-radius:10px;padding:14px;margin-top:8px;">${behindTheScenes.replace(/</g, '&lt;')}</p>` : '';
+
+  const bodyHtml = `${songsHtml}${coverHtml}${timelineHtml}${btsHtml}
+    <p style="font-size:13px;color:#888;margin-top:20px;">⏰ Os links de download expiram em 48 horas -- baixe e salve os arquivos agora.</p>`;
+
+  const html = buildSimpleBonusHtml({ title: '🎼 Seu Álbum Completo', introHtml, bodyHtml, appUrl });
+  const text = `Seu Álbum Completo para ${nomeDestinatario} está pronto!\n\n` + (songs || []).map((s, i) => `Música ${i + 2} (${s.tema}): ${s.downloadUrl}`).join('\n') + '\n\n⏰ Links expiram em 48h.\n\nEquipe SuaMúsicaAI';
+  return dispatchEmail({ to, subject, html, text, logLabel: 'upsell álbum' });
+}
+
+/**
+ * Upsell 2: VIP Acesso Ilimitado -- confirma a ativação e o prazo.
+ */
+async function sendUpsellVipEmail({ to, vipUntil, vipUrl }) {
+  const appUrl = process.env.APP_URL || 'https://suamusicaai.com.br';
+  const dataFormatada = new Date(vipUntil).toLocaleDateString('pt-BR');
+  const subject = `👑 Seu Acesso VIP está ativo`;
+  const introHtml = `<p>Olá! 💕</p><p>Seu <strong>Acesso VIP Ilimitado</strong> está ativo -- músicas, vídeos e cartas sem limite até <strong>${dataFormatada}</strong>.</p>`;
+  const bodyHtml = `
+    ${vipUrl ? `<a href="${vipUrl}" class="btn">🎶 Criar minha próxima música</a>` : ''}
+    <p style="font-size:13px;color:#888;margin-top:16px;">Use o mesmo email desta compra para gerar suas músicas ilimitadas.</p>`;
+  const html = buildSimpleBonusHtml({ title: '👑 Acesso VIP ativado', introHtml, bodyHtml, appUrl });
+  const text = `Seu Acesso VIP Ilimitado está ativo até ${dataFormatada}.\n\n${vipUrl ? `Criar música: ${vipUrl}\n\n` : ''}Equipe SuaMúsicaAI`;
+  return dispatchEmail({ to, subject, html, text, logLabel: 'upsell VIP' });
+}
+
+module.exports = { sendDownloadEmail, sendPack3Email, sendVideoEmail, sendCreditsEmail, sendAbandonedPreviewEmail, sendBumpInstrumentalEmail, sendBumpCartasEmail, sendBumpPlaylistEmail, sendUpsellAlbumEmail, sendUpsellVipEmail };

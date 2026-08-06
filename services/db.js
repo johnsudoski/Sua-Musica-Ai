@@ -19,6 +19,13 @@ async function initSchema() {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );
 
+    CREATE TABLE IF NOT EXISTS vip_access (
+      email TEXT PRIMARY KEY,
+      vip_until TIMESTAMPTZ NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+
     CREATE TABLE IF NOT EXISTS video_requests (
       id SERIAL PRIMARY KEY,
       request_id TEXT UNIQUE NOT NULL,
@@ -124,6 +131,34 @@ async function consumeCredit(email) {
     [normalized]
   );
   return result.rows.length > 0;
+}
+
+// ─── Acesso VIP (assinatura anual, acesso ilimitado) ───
+
+// Concede/renova VIP por `days` a partir de AGORA (não empilha em cima do
+// que sobrava -- é o comportamento correto pra renovação de assinatura:
+// cada pagamento aprovado da Ticto para o offer_id do VIP passa por aqui,
+// tanto a primeira compra quanto renovações futuras).
+async function grantVipAccess(email, days = 365) {
+  const normalized = email.toLowerCase().trim();
+  const result = await pool.query(
+    `INSERT INTO vip_access (email, vip_until, updated_at)
+     VALUES ($1, now() + ($2 || ' days')::interval, now())
+     ON CONFLICT (email) DO UPDATE SET vip_until = now() + ($2 || ' days')::interval, updated_at = now()
+     RETURNING vip_until`,
+    [normalized, days]
+  );
+  return result.rows[0].vip_until;
+}
+
+async function checkVipStatus(email) {
+  const normalized = (email || '').toLowerCase().trim();
+  if (!normalized) return { isVip: false, vipUntil: null };
+  const result = await pool.query(`SELECT vip_until FROM vip_access WHERE email = $1`, [normalized]);
+  const row = result.rows[0];
+  if (!row) return { isVip: false, vipUntil: null };
+  const isVip = new Date(row.vip_until) > new Date();
+  return { isVip, vipUntil: row.vip_until };
 }
 
 // ─── Pedidos de Vídeo Homenagem ───
@@ -450,6 +485,8 @@ module.exports = {
   getOrder,
   getOrderByEmail,
   getAbandonedPreviews,
+  grantVipAccess,
+  checkVipStatus,
   markRecoveryEmailSent,
   orderRowToMemoryFormat,
   updateOrderContact,

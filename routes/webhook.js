@@ -9,9 +9,18 @@ const crypto = require('crypto');
 const axios = require('axios');
 const db = require('../services/db');
 const { generateFull, generateInstrumental } = require('../services/suno');
-const { generateLoveLetterSet } = require('../services/letterAI');
+const { generateLoveLetterSet, generateBehindTheScenes } = require('../services/letterAI');
+const { generateImage } = require('../services/imageGen');
 const emailService = require('../services/email');
 const { sendPurchaseEvent } = require('../services/metaCapi');
+
+// ─── Upsell Álbum: os 4 capítulos extras além do que já foi comprado ───
+const ALBUM_TEMAS_EXTRA = [
+  { tema: 'O primeiro beijo e o primeiro "eu te amo"', genero: 'romantico' },
+  { tema: 'O momento mais difícil que superaram juntos', genero: 'mpb' },
+  { tema: 'Por que essa pessoa é amada dessa forma', genero: 'pop' },
+  { tema: 'O futuro que vocês vão construir juntos', genero: 'pagode' },
+];
 
 const router = express.Router();
 
@@ -25,6 +34,9 @@ const PRODUCT_IDS = {
   bump_instrumental: process.env.TICTO_BUMP_INSTRUMENTAL_PRODUCT || 'O56FD8D3A',
   bump_cartas:        process.env.TICTO_BUMP_CARTAS_PRODUCT        || 'OD7EA6425',
   bump_playlist:       process.env.TICTO_BUMP_PLAYLIST_PRODUCT      || 'O4E87373F',
+  // Upsells (página separada pós-compra, checkout próprio)
+  upsell_album: process.env.TICTO_UPSELL_ALBUM_PRODUCT || 'OC73D4E60',
+  upsell_vip:    process.env.TICTO_UPSELL_VIP_PRODUCT    || 'OC2127151',
 };
 
 // ─── Valores dos produtos (pra reportar ao Meta via Conversions API) ───
@@ -36,6 +48,8 @@ const PRODUCT_VALUES = {
   bump_instrumental: 14.90,
   bump_cartas:        19.90,
   bump_playlist:       7.90,
+  upsell_album: 149.90,
+  upsell_vip:    497.00,
 };
 
 // ─── Detecta qual produto foi comprado pelo payload Ticto ───
@@ -46,6 +60,8 @@ function detectProductType(payload) {
   if (offerId === PRODUCT_IDS.bump_instrumental) return 'bump_instrumental';
   if (offerId === PRODUCT_IDS.bump_cartas)        return 'bump_cartas';
   if (offerId === PRODUCT_IDS.bump_playlist)       return 'bump_playlist';
+  if (offerId === PRODUCT_IDS.upsell_album) return 'upsell_album';
+  if (offerId === PRODUCT_IDS.upsell_vip)    return 'upsell_vip';
   if (offerId === PRODUCT_IDS.pack3) return 'pack3';
   if (offerId === PRODUCT_IDS.video) return 'video';
   if (offerId === PRODUCT_IDS.mp3)   return 'mp3';
@@ -214,6 +230,10 @@ router.post('/ticto', async (req, res) => {
       await handleBumpCartas(campaignId, email);
     } else if (productType === 'bump_playlist') {
       await handleBumpPlaylist(campaignId, email);
+    } else if (productType === 'upsell_album') {
+      await handleUpsellAlbumPurchase(campaignId, email);
+    } else if (productType === 'upsell_vip') {
+      await handleUpsellVipPurchase(campaignId, email);
     } else if (campaignId) {
       triggerFullGeneration(campaignId, email, productType);
     } else if (email) {
@@ -276,6 +296,83 @@ async function handleBumpCartas(orderId, email) {
     console.log(`Bump Cartas: entregue para ${emailTo} (orderId ${orderId})`);
   } catch (err) {
     console.error(`Bump Cartas: falha ao gerar/entregar para orderId ${orderId}:`, err.message);
+  }
+}
+
+// ─── Upsell: Álbum Completo (4 músicas extras + capa + linha do tempo + behind the scenes) ───
+// Vídeo-compilation NÃO está incluso -- o serviço externo de vídeo atual foi
+// desenhado pra 1 música só, compilar 5 num vídeo de 15min precisa de infra
+// que ainda não existe. Entrega real: 4 músicas + os 3 bônus gerados de verdade.
+async function handleUpsellAlbumPurchase(orderId, email) {
+  if (!orderId) { console.warn('Upsell Álbum: sem orderId (utm_campaign) — não é possível localizar a história'); return; }
+  const row = await db.getOrder(orderId).catch(() => null);
+  if (!row?.form_data) { console.warn(`Upsell Álbum: pedido ${orderId} não encontrado`); return; }
+
+  const emailTo = (email || row.email || '').toLowerCase().trim();
+  if (!emailTo) { console.warn(`Upsell Álbum: sem email para orderId ${orderId}`); return; }
+
+  const nomeDestinatario = row.form_data.nomeDestinatario;
+  const songs = [];
+
+  for (const t of ALBUM_TEMAS_EXTRA) {
+    try {
+      const formDataVariant = {
+        ...row.form_data,
+        memoria: `${row.form_data.memoria} (foco desta música: ${t.tema})`,
+        genero: t.genero,
+      };
+      const { audioUrl } = await generateFull(formDataVariant);
+      const token = crypto.randomBytes(32).toString('hex');
+      global.downloadTokens.set(token, { orderId: `${orderId}-album-${songs.length}`, audioUrl, expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000) });
+      songs.push({ tema: t.tema, downloadUrl: `${process.env.APP_URL}/api/download/${token}` });
+    } catch (err) {
+      console.error(`Upsell Álbum: falha ao gerar música do tema "${t.tema}" (orderId ${orderId}):`, err.message);
+    }
+  }
+
+  let coverUrl = null, timelineUrl = null, behindTheScenes = null;
+  try {
+    const coverPrompt = `Dark background gradient from deep navy-black to soft pink-purple glow, romantic modern aesthetic, cinematic lighting, blurred bokeh light particles. Center composition: a premium vinyl album cover mockup floating at a slight angle, glowing grooves catching pink-purple light, five small glowing musical notes orbiting around it. Premium minimalist digital product cover, no text, no logos, no realistic human faces, square 1:1 aspect ratio, glossy premium finish.`;
+    const cover = await generateImage({ prompt: coverPrompt });
+    coverUrl = cover.imageUrl;
+  } catch (err) { console.error(`Upsell Álbum: falha ao gerar capa (orderId ${orderId}):`, err.message); }
+
+  try {
+    const timelinePrompt = `Dark background gradient from deep navy-black to soft pink-purple glow, elegant infographic style, illustrated timeline with glowing connecting line, small romantic icons (hearts, music notes) marking points along the line, premium minimalist aesthetic, no text, no logos, no realistic human faces, square 1:1 aspect ratio.`;
+    const timeline = await generateImage({ prompt: timelinePrompt });
+    timelineUrl = timeline.imageUrl;
+  } catch (err) { console.error(`Upsell Álbum: falha ao gerar linha do tempo (orderId ${orderId}):`, err.message); }
+
+  try {
+    behindTheScenes = await generateBehindTheScenes({
+      nomeDestinatario,
+      relacao: row.form_data.relacao,
+      memoria: row.form_data.memoria,
+      temas: ['A música original que você já recebeu', ...ALBUM_TEMAS_EXTRA.map(t => t.tema)],
+    });
+  } catch (err) { console.error(`Upsell Álbum: falha ao gerar behind the scenes (orderId ${orderId}):`, err.message); }
+
+  try {
+    await emailService.sendUpsellAlbumEmail({ to: emailTo, nomeDestinatario, songs, coverUrl, timelineUrl, behindTheScenes });
+    console.log(`Upsell Álbum: entregue para ${emailTo} (orderId ${orderId}, ${songs.length}/4 músicas extras geradas)`);
+  } catch (err) {
+    console.error(`Upsell Álbum: falha ao enviar email final (orderId ${orderId}):`, err.message);
+  }
+}
+
+// ─── Upsell: VIP Acesso Ilimitado por 1 ano ───
+async function handleUpsellVipPurchase(orderId, email) {
+  const row = orderId ? await db.getOrder(orderId).catch(() => null) : null;
+  const emailTo = (email || row?.email || '').toLowerCase().trim();
+  if (!emailTo) { console.warn(`Upsell VIP: sem email para orderId ${orderId}`); return; }
+
+  try {
+    const vipUntil = await db.grantVipAccess(emailTo, 365);
+    const vipUrl = `${process.env.APP_URL || 'https://suamusicaai.com.br'}/vip.html`;
+    await emailService.sendUpsellVipEmail({ to: emailTo, vipUntil, vipUrl });
+    console.log(`Upsell VIP: acesso concedido para ${emailTo} até ${vipUntil}`);
+  } catch (err) {
+    console.error(`Upsell VIP: falha ao conceder acesso para ${emailTo}:`, err.message);
   }
 }
 

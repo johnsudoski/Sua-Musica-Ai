@@ -26,6 +26,7 @@ const creditsRoutes = require('./routes/credits');
 const adminRoutes = require('./routes/admin');
 const lettersRoutes = require('./routes/letters');
 const reviewsRoutes = require('./routes/reviews');
+const vipRoutes = require('./routes/vip');
 const db = require('./services/db');
 const { runAbandonedPreviewRecovery } = require('./services/recovery');
 
@@ -112,6 +113,7 @@ app.use('/api/credits', creditsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/letters', lettersRoutes);
 app.use('/api/reviews', reviewsRoutes);
+app.use('/api/vip', vipRoutes);
 
 // ─── Página de obrigado ───
 app.get('/obrigado', (req, res) => {

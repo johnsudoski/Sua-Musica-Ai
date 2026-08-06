@@ -118,8 +118,7 @@
 
   <!-- CTA DUPLO -->
   <div class="section" style="padding-top:0;">
-    <!-- SUBSTITUIR href="#" pelo link de checkout da Ticto quando estiver criado -->
-    <a href="#" id="ctaYes" class="cta-yes">✅ SIM! Quero o Álbum Completo + Vídeo Compilation</a>
+    <a href="https://checkout.ticto.app/OC73D4E60" id="ctaYes" class="cta-yes">✅ SIM! Quero o Álbum Completo + Vídeo Compilation</a>
     <button type="button" class="cta-no" onclick="document.getElementById('naoObrigado').scrollIntoView({behavior:'smooth'})">Não, vou ficar só com 1 música por enquanto</button>
   </div>
 
@@ -213,8 +212,7 @@
   <div class="section center">
     <h2 style="margin-bottom:14px;">Última chamada</h2>
     <p style="color:var(--muted);margin-bottom:20px;">Esta página de upgrade só aparece uma vez, agora, logo após sua compra.</p>
-    <!-- SUBSTITUIR href="#" pelo link de checkout da Ticto -->
-    <a href="#" class="cta-yes" style="max-width:520px;margin-left:auto;margin-right:auto;">✅ QUERO O ÁLBUM COMPLETO + BÔNUS POR R$149,90</a>
+    <a href="https://checkout.ticto.app/OC73D4E60" class="cta-yes" style="max-width:520px;margin-left:auto;margin-right:auto;">✅ QUERO O ÁLBUM COMPLETO + BÔNUS POR R$149,90</a>
     <p id="naoObrigado" style="margin-top:16px;">
       <button type="button" class="cta-no" onclick="window.location.href='/obrigado.html'">Não, obrigado — seguir só com a minha música</button>
     </p>
@@ -246,6 +244,24 @@ function tick() {
   if (el) el.textContent = formatCountdown(nextSundayMidnight() - new Date());
 }
 tick(); setInterval(tick, 1000);
+
+// Anexa orderId/email (se a Ticto passar via query string ao redirecionar
+// pra essa página de upsell) nos links de checkout -- mesmo padrão do
+// openCheckout() da home, pra rastrear qual pedido gerou esse upsell.
+(function attachOrderParams() {
+  var params = new URLSearchParams(window.location.search);
+  var orderId = params.get('orderId') || params.get('order_id') || sessionStorage.getItem('sua_musica_orderId');
+  var email = params.get('email');
+  if (!orderId && !email) return;
+  document.querySelectorAll('a.cta-yes').forEach(function(a) {
+    try {
+      var url = new URL(a.href);
+      if (orderId) url.searchParams.set('utm_campaign', orderId);
+      if (email) url.searchParams.set('email', email);
+      a.href = url.toString();
+    } catch (_) {}
+  });
+})();
 
 // Reviews reais (mesma fonte da home) -- some se não houver volume ainda
 var API_BASE = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'http://localhost:3000' : '';

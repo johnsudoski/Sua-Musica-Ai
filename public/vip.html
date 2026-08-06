@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Painel VIP — SuaMúsicaAI</title>
+<meta name="robots" content="noindex, nofollow" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#0D0D1A;color:#e2e2f0;font-family:'Inter',sans-serif;padding:32px 16px 60px;}
+  .wrap{max-width:520px;margin:0 auto;}
+  .badge{display:inline-flex;align-items:center;gap:8px;background:rgba(245,185,66,0.12);border:1px solid rgba(245,185,66,0.35);color:#F5B942;padding:8px 20px;border-radius:50px;font-size:13px;font-weight:700;margin-bottom:20px;}
+  h1{font-size:24px;margin-bottom:8px;}
+  .sub{color:#a09bb8;font-size:14px;margin-bottom:28px;}
+  label{display:block;font-size:13px;color:#ccc;margin-bottom:6px;margin-top:16px;font-weight:600;}
+  input,select,textarea{width:100%;background:#161628;border:1px solid #2a2a45;border-radius:10px;padding:13px 14px;color:#fff;font-size:15px;font-family:inherit;}
+  textarea{resize:vertical;min-height:90px;}
+  .btn{display:block;width:100%;background:linear-gradient(135deg,#F5B942,#E91E8C);color:#fff;border:none;padding:16px;border-radius:50px;font-size:16px;font-weight:800;cursor:pointer;margin-top:24px;}
+  .btn:disabled{opacity:0.5;cursor:not-allowed;}
+  .status-box{margin-top:20px;padding:16px;border-radius:12px;font-size:14px;display:none;}
+  .status-ok{background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);color:#86efac;}
+  .status-err{background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);color:#fca5a5;}
+  .genre-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px;}
+  .genre-grid label{background:#161628;border:1px solid #2a2a45;border-radius:8px;padding:10px;text-align:center;font-size:13px;cursor:pointer;margin:0;}
+  .genre-grid input{display:none;}
+  .genre-grid input:checked + span{color:#F5B942;font-weight:700;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <span class="badge">👑 Painel VIP</span>
+  <h1>Criar nova música</h1>
+  <p class="sub">Acesso ilimitado -- crie quantas quiser, sem pagar de novo.</p>
+
+  <div id="checkBox">
+    <label for="emailCheck">Seu email VIP</label>
+    <input type="email" id="emailCheck" placeholder="seu@email.com" />
+    <button type="button" class="btn" id="btnCheck">Verificar acesso</button>
+    <div id="checkStatus" class="status-box"></div>
+  </div>
+
+  <form id="vipForm" style="display:none;">
+    <input type="hidden" id="emailHidden" />
+    <label for="nome">Nome de quem vai receber</label>
+    <input type="text" id="nome" required maxlength="50" />
+
+    <label for="relacao">Relação</label>
+    <select id="relacao" required>
+      <option value="">Escolha...</option>
+      <option value="namorado">Namorado(a)</option>
+      <option value="esposo">Esposo(a)</option>
+      <option value="mae">Mãe</option>
+      <option value="pai">Pai</option>
+      <option value="filho">Filho(a)</option>
+      <option value="amigo">Amigo(a)</option>
+      <option value="avo">Avó/Avô</option>
+      <option value="irmao">Irmão(ã)</option>
+    </select>
+
+    <label for="memoria">Memória especial</label>
+    <textarea id="memoria" required maxlength="500"></textarea>
+
+    <label>Estilo musical</label>
+    <div class="genre-grid">
+      <label><input type="radio" name="genero" value="sertanejo" required /><span>Sertanejo</span></label>
+      <label><input type="radio" name="genero" value="pop" /><span>Pop</span></label>
+      <label><input type="radio" name="genero" value="mpb" /><span>MPB</span></label>
+      <label><input type="radio" name="genero" value="romantico" /><span>Romântico</span></label>
+      <label><input type="radio" name="genero" value="pagode" /><span>Pagode</span></label>
+      <label><input type="radio" name="genero" value="gospel" /><span>Gospel</span></label>
+    </div>
+
+    <label>Voz</label>
+    <div class="genre-grid" style="grid-template-columns:1fr 1fr;">
+      <label><input type="radio" name="voz" value="feminino" checked /><span>Feminina</span></label>
+      <label><input type="radio" name="voz" value="masculino" /><span>Masculina</span></label>
+    </div>
+
+    <button type="submit" class="btn" id="btnGerar">🎵 Criar música agora</button>
+    <div id="genStatus" class="status-box"></div>
+  </form>
+</div>
+
+<script>
+var API_BASE = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'http://localhost:3000' : '';
+
+document.getElementById('btnCheck').addEventListener('click', function() {
+  var email = document.getElementById('emailCheck').value.trim();
+  var statusEl = document.getElementById('checkStatus');
+  if (!email) return;
+  statusEl.style.display = 'block';
+  statusEl.className = 'status-box';
+  statusEl.textContent = 'Verificando...';
+
+  fetch(API_BASE + '/api/vip/status?email=' + encodeURIComponent(email))
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.isVip) {
+        statusEl.className = 'status-box status-ok';
+        var until = new Date(data.vipUntil).toLocaleDateString('pt-BR');
+        statusEl.textContent = '✅ Acesso VIP ativo até ' + until;
+        document.getElementById('emailHidden').value = email;
+        document.getElementById('vipForm').style.display = 'block';
+      } else {
+        statusEl.className = 'status-box status-err';
+        statusEl.textContent = '❌ Este email não tem acesso VIP ativo.';
+        document.getElementById('vipForm').style.display = 'none';
+      }
+    })
+    .catch(function() {
+      statusEl.className = 'status-box status-err';
+      statusEl.textContent = 'Erro ao verificar. Tente novamente.';
+    });
+});
+
+document.getElementById('vipForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  var btn = document.getElementById('btnGerar');
+  var statusEl = document.getElementById('genStatus');
+  btn.disabled = true;
+  btn.textContent = '⏳ Criando...';
+  statusEl.style.display = 'block';
+  statusEl.className = 'status-box';
+  statusEl.textContent = 'Sua música está sendo criada -- isso leva de 3 a 5 minutos. Você vai receber por email.';
+
+  var genero = document.querySelector('input[name="genero"]:checked');
+  var voz = document.querySelector('input[name="voz"]:checked');
+
+  fetch(API_BASE + '/api/vip/generate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email: document.getElementById('emailHidden').value,
+      nomeDestinatario: document.getElementById('nome').value,
+      relacao: document.getElementById('relacao').value,
+      memoria: document.getElementById('memoria').value,
+      genero: genero ? genero.value : '',
+      voz: voz ? voz.value : 'feminino',
+    }),
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data.success) {
+        statusEl.className = 'status-box status-err';
+        statusEl.textContent = data.error || 'Erro ao criar música.';
+      } else {
+        statusEl.className = 'status-box status-ok';
+        statusEl.textContent = '✅ Pedido recebido! Você recebe por email em alguns minutos.';
+      }
+      btn.disabled = false;
+      btn.textContent = '🎵 Criar outra música';
+    })
+    .catch(function() {
+      statusEl.className = 'status-box status-err';
+      statusEl.textContent = 'Erro de conexão. Tente novamente.';
+      btn.disabled = false;
+      btn.textContent = '🎵 Criar música agora';
+    });
+});
+</script>
+</body>
+</html>

@@ -145,4 +145,47 @@ Responda em formato JSON puro, um array de 12 objetos, cada um com "tema" (copie
   return letters;
 }
 
-module.exports = { generateLoveLetter, generateLoveLetterSet };
+/**
+ * Gera o texto "Behind the Scenes" do Upsell Álbum -- explica a inspiração
+ * e as escolhas por trás das 5 músicas, baseado nos temas reais usados.
+ */
+async function generateBehindTheScenes({ nomeDestinatario, relacao, memoria, temas }) {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    throw new Error('ANTHROPIC_API_KEY não configurada -- geração indisponível');
+  }
+  const relacaoTexto = RELACAO_TEXTO[relacao] || relacao || 'pessoa especial';
+  const temasTexto = temas.map((t, i) => `${i + 1}. ${t}`).join('\n');
+
+  const prompt = `Escreva um texto em português do Brasil chamado "Behind the Scenes" explicando, pra quem encomendou, a inspiração por trás de um álbum de 5 músicas personalizadas criado para ${nomeDestinatario} (${relacaoTexto} de quem encomendou).
+
+As 5 músicas, cada uma sobre um tema diferente:
+${temasTexto}
+
+Memória real contada por quem encomendou, usada como base (não invente outros fatos):
+"${memoria}"
+
+Regras:
+- Tom caloroso, pessoal, como se fosse a "equipe criativa" explicando as escolhas -- não piegas
+- Para cada uma das 5 músicas, escreva 1 parágrafo curto (40-60 palavras) explicando por que aquele tema e aquele estilo foram escolhidos
+- Não invente fatos além da memória fornecida
+- Sem markdown, texto corrido com títulos simples tipo "Música 1: [tema]" antes de cada parágrafo`;
+
+  const res = await axios.post(
+    'https://api.anthropic.com/v1/messages',
+    {
+      model: 'claude-sonnet-4-5-20250929',
+      max_tokens: 1200,
+      messages: [{ role: 'user', content: prompt }],
+    },
+    {
+      headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+      timeout: 45000,
+    }
+  );
+  const text = res.data?.content?.[0]?.text;
+  if (!text) throw new Error('Resposta da IA sem texto (behind the scenes)');
+  return text.trim();
+}
+
+module.exports = { generateLoveLetter, generateLoveLetterSet, generateBehindTheScenes };
