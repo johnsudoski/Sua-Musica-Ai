@@ -37,6 +37,46 @@ fetch(API_BASE + '/api/stats/live')
   })
   .catch(function() {});
 
+// ─── Nav estilo Netflix: transparente no topo, sólida ao rolar ───
+var _mainNav = document.getElementById('mainNav');
+function updateNavScroll() {
+  if (!_mainNav) return;
+  _mainNav.classList.toggle('scrolled', window.scrollY > 60);
+}
+window.addEventListener('scroll', updateNavScroll, { passive: true });
+updateNavScroll();
+
+// ─── Countdown real: expira toda semana (domingo 23:59:59), não é fake
+// por-visitante -- todo mundo que visita na mesma semana vê o mesmo prazo,
+// e ele de fato reseta quando a semana vira. ───
+function nextSundayMidnight() {
+  var now = new Date();
+  var day = now.getDay(); // 0 = domingo
+  var daysUntilSunday = (7 - day) % 7;
+  var target = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysUntilSunday, 23, 59, 59);
+  if (target <= now) target.setDate(target.getDate() + 7);
+  return target;
+}
+function formatCountdown(ms) {
+  if (ms <= 0) return '00:00:00';
+  var totalSec = Math.floor(ms / 1000);
+  var h = Math.floor(totalSec / 3600);
+  var m = Math.floor((totalSec % 3600) / 60);
+  var s = totalSec % 60;
+  function pad(n) { return String(n).padStart(2, '0'); }
+  return pad(h) + ':' + pad(m) + ':' + pad(s);
+}
+function tickCountdown() {
+  var target = nextSundayMidnight();
+  var text = formatCountdown(target - new Date());
+  var el1 = document.getElementById('countdownText');
+  var el2 = document.getElementById('countdownText2');
+  if (el1) el1.textContent = text;
+  if (el2) el2.textContent = text;
+}
+tickCountdown();
+setInterval(tickCountdown, 1000);
+
 // ─── Depoimentos reais (nunca fabricados -- some se não houver volume ainda) ───
 fetch(API_BASE + '/api/reviews/approved?limit=6')
   .then(function(r) { return r.json(); })

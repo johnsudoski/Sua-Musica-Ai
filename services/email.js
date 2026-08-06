@@ -22,6 +22,17 @@ function buildQrSection({ qrDataUri, listenUrl }) {
       </div>`;
 }
 
+function buildBonusSection({ appUrl }) {
+  return `
+      <div style="background:#1c1830;border:1px solid rgba(233,30,140,0.25);border-radius:16px;padding:22px;margin:24px 0;">
+        <p style="color:#fff;font-weight:bold;font-size:15px;margin:0 0 14px;text-align:center;">🎁 Seus bônus (inclusos, sem custo extra)</p>
+        <p style="margin:0 0 8px;"><a href="${appUrl}/bonus-mensagens.html" style="color:#f9a8d4;text-decoration:none;font-size:13.5px;">💌 10 Mensagens Românticas Prontas →</a></p>
+        <p style="margin:0 0 8px;"><a href="${appUrl}/bonus-viralizar.html" style="color:#f9a8d4;text-decoration:none;font-size:13.5px;">📱 Guia: Como Postar Sem Parecer Forçado →</a></p>
+        <p style="margin:0 0 8px;"><a href="${appUrl}/bonus-calendario.html" style="color:#f9a8d4;text-decoration:none;font-size:13.5px;">📅 Calendário de Ideias — 12 Meses →</a></p>
+        <p style="margin:0;"><a href="${appUrl}/bonus-erros.html" style="color:#f9a8d4;text-decoration:none;font-size:13.5px;">📖 Os 7 Erros Que Matam a Emoção →</a></p>
+      </div>`;
+}
+
 function buildLetterSection({ letterUrl }) {
   if (!letterUrl) return '';
   return `
@@ -328,6 +339,7 @@ function buildVideoHtml({ nomeDestinatario, mp3DownloadUrl, videoDownloadUrl, ap
         ⏰ <strong>Importante:</strong> Os links expiram em 48 horas.
         Baixe e salve os arquivos agora!
       </p>
+      ${buildBonusSection({ appUrl })}
       <p>
         Cause aquela emoção inesquecível em <span class="name">${nomeDestinatario}</span>! 🥺❤️
       </p>
@@ -335,7 +347,6 @@ function buildVideoHtml({ nomeDestinatario, mp3DownloadUrl, videoDownloadUrl, ap
     </div>
     <div class="footer">
       <p>SuaMúsicaAI • O presente mais emocionante do Brasil 🇧🇷</p>
-      ${typeof reviewUrl !== 'undefined' && reviewUrl ? `<p style="margin-top:8px;"><a href="${reviewUrl}" style="color:#E91E8C;">⭐ Já ouviu? Conta pra gente como foi</a></p>` : ''}
       <p style="margin-top:8px;"><a href="${appUrl}" style="color:#E91E8C;">Criar outra música</a></p>
       <p style="margin-top:8px;">Dúvidas? <a href="mailto:suportesuamusicaai@gmail.com" style="color:#888;">suportesuamusicaai@gmail.com</a></p>
     </div>
@@ -358,7 +369,7 @@ async function sendVideoEmail({ to, nomeDestinatario, mp3DownloadUrl, videoDownl
 }
 
 // ── Template: Créditos liberados (Pacote 3 Músicas) ──
-function buildCreditsHtml({ balance, creditsUrl }) {
+function buildCreditsHtml({ balance, creditsUrl, appUrl }) {
   return `
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -397,6 +408,7 @@ function buildCreditsHtml({ balance, creditsUrl }) {
       <p class="note">
         Use o mesmo email desta compra na página acima para acessar seus créditos.
       </p>
+      ${buildBonusSection({ appUrl: appUrl || 'https://suamusicaai.com.br' })}
       <p>Com carinho,<br><strong>Equipe SuaMúsicaAI</strong></p>
     </div>
     <div class="footer">
@@ -412,8 +424,9 @@ function buildCreditsHtml({ balance, creditsUrl }) {
  * Envia email avisando que os créditos do Pacote 3 Músicas foram liberados.
  */
 async function sendCreditsEmail({ to, balance, creditsUrl }) {
+  const appUrl  = process.env.APP_URL || 'https://suamusicaai.com.br';
   const subject = `🎵 Seus ${balance} créditos de música estão liberados!`;
-  const html    = buildCreditsHtml({ balance, creditsUrl });
+  const html    = buildCreditsHtml({ balance, creditsUrl, appUrl });
   const text    = `Sua compra foi confirmada! Você tem ${balance} música(s) disponível(is).\n\nCrie agora: ${creditsUrl}\n\nUse o mesmo email desta compra.\n\nEquipe SuaMúsicaAI`;
   return dispatchEmail({ to, subject, html, text, logLabel: 'créditos' });
 }

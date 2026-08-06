@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>SuaMúsicaAI — Ouve 40 segundos grátis. Paga só se amar.</title>
-  <meta name="description" content="IA cria uma música com o nome dela e a história de vocês. Preview grátis de 40 segundos. Só paga se amar. MP3 completo ou Vídeo com legenda." />
-  <meta property="og:title" content="Ela vai chorar ouvindo uma música feita só pra ela" />
-  <meta property="og:description" content="Preview 30s grátis. MP3 ou Vídeo com letra. Pronto em menos de 3 minutos." />
+  <title>Faça Ela Chorar de Emoção Ou Você Não Paga — SuaMúsicaAI</title>
+  <meta name="description" content="Uma música original com o nome dela e a história real de vocês, criada por IA em 3 minutos. Ouça o preview grátis antes de decidir." />
+  <meta property="og:title" content="Faça Ela Chorar de Emoção Ou Você Não Paga Um Centavo" />
+  <meta property="og:description" content="Preview grátis antes de decidir. Música original com o nome dela na letra, criada em 3 minutos." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
@@ -34,143 +34,52 @@
       })(window, document, "clarity", "script", "xm2zpgivms");
   </script>
   <style>
-    /* ─── TOP BAR — fixo acima do nav ─── */
+    /* ─── TOP BAR ─── */
     .top-announcement {
-      position: fixed !important;
-      top: 0 !important;
-      left: 0 !important;
-      right: 0 !important;
-      z-index: 200 !important;
+      position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; z-index: 200 !important;
       background: linear-gradient(135deg, #E91E8C, #7B2FBE) !important;
-      padding: 9px 20px;
-      text-align: center;
-      font-size: 14px;
-      font-weight: 700;
-      letter-spacing: 0.2px;
-      color: #fff;
+      padding: 9px 20px; text-align: center; font-size: 14px; font-weight: 700; letter-spacing: 0.2px; color: #fff;
     }
-    .top-announcement a { color: #fff; text-decoration: underline; }
-
-    /* ─── NAV — empurrado 40px para baixo do top bar, sem blur cinza ─── */
-    nav.nav {
-      top: 40px !important;
-      backdrop-filter: none !important;
-      -webkit-backdrop-filter: none !important;
-      background: var(--dark) !important;
-    }
-
-    /* ─── BOTÃO FLUTUANTE — fixo no rodapé ─── */
+    /* ─── NAV ─── */
+    nav.nav { top: 40px !important; }
+    /* ─── BOTÃO FLUTUANTE ─── */
     .float-cta {
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      z-index: 150;
-      background: rgba(13,13,26,0.97);
-      border-top: 1px solid rgba(233,30,140,0.35);
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 150;
+      background: rgba(13,13,26,0.97); border-top: 1px solid rgba(233,30,140,0.35);
       padding: 12px 20px calc(16px + env(safe-area-inset-bottom, 0px));
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 12px;
+      display: flex; justify-content: center; align-items: center; gap: 12px;
     }
     .float-cta a {
-      background: linear-gradient(135deg, #E91E8C, #7B2FBE);
-      color: #fff;
-      padding: 14px 36px;
-      border-radius: 50px;
-      font-size: 16px;
-      font-weight: 800;
-      text-decoration: none;
-      box-shadow: 0 4px 20px rgba(233,30,140,0.45);
-      letter-spacing: 0.2px;
-      transition: transform 0.2s;
+      background: linear-gradient(135deg, #E91E8C, #7B2FBE); color: #fff; padding: 14px 36px; border-radius: 50px;
+      font-size: 16px; font-weight: 800; text-decoration: none; box-shadow: 0 4px 20px rgba(233,30,140,0.45);
+      letter-spacing: 0.2px; transition: transform 0.2s;
     }
     .float-cta a:hover { transform: translateY(-2px); }
-    .float-cta-note {
-      font-size: 11px;
-      color: rgba(160,155,184,0.7);
-      text-align: center;
-      line-height: 1.4;
-    }
-    body { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
+    .float-cta-note { font-size: 11px; color: rgba(160,155,184,0.7); text-align: center; line-height: 1.4; }
+    body { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); padding-top: 40px; }
 
     /* ─── VALUE TRIO ─── */
-    .value-trio {
-      background: var(--dark2);
-      border-bottom: 1px solid rgba(255,255,255,0.07);
-      padding: 28px 20px;
-    }
-    .value-trio-inner {
-      max-width: 900px;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 1px;
-      background: rgba(255,255,255,0.08);
-      border-radius: 18px;
-      overflow: hidden;
-      border: 1px solid rgba(255,255,255,0.08);
-    }
-    .vtrio-card {
-      background: var(--dark2);
-      padding: 24px 22px;
-      display: flex;
-      align-items: flex-start;
-      gap: 14px;
-      transition: background 0.2s;
-    }
+    .value-trio { background: var(--dark2); border-bottom: 1px solid rgba(255,255,255,0.07); padding: 28px 20px; }
+    .value-trio-inner { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px; background: rgba(255,255,255,0.08); border-radius: 18px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); }
+    .vtrio-card { background: var(--dark2); padding: 24px 22px; display: flex; align-items: flex-start; gap: 14px; transition: background 0.2s; }
     .vtrio-card:hover { background: rgba(255,255,255,0.03); }
     .vtrio-icon { font-size: 26px; flex-shrink: 0; margin-top: 3px; }
     .vtrio-title { font-size: 13.5px; font-weight: 800; color: #fff; margin-bottom: 5px; line-height: 1.3; }
     .vtrio-desc { font-size: 12.5px; color: var(--text-muted); line-height: 1.65; }
     .vtrio-desc strong { color: #e2d9ff; font-weight: 600; }
-    .vtrio-proof {
-      text-align: center;
-      margin-top: 14px;
-      padding: 10px 20px;
-      background: rgba(255,255,255,0.93);
-      border-radius: 10px;
-      font-size: 12px;
-      color: #1a1a2e;
-      font-weight: 600;
-      letter-spacing: 0.3px;
-    }
+    .vtrio-proof { text-align: center; margin-top: 14px; padding: 10px 20px; background: rgba(255,255,255,0.93); border-radius: 10px; font-size: 12px; color: #1a1a2e; font-weight: 600; letter-spacing: 0.3px; }
     .vtrio-proof span { margin: 0 6px; color: #333; }
     .vtrio-proof b { color: #E91E8C; font-weight: 800; }
 
-    /* ─── HERO ─── */
-    .hero { padding: 90px 20px 70px; min-height: auto; overflow: visible; margin-top: 98px; /* 40px top-bar + 58px nav, ambos fixed */ }
-    .free-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.14);
-      padding: 8px 20px;
-      border-radius: 50px;
-      font-size: 14px;
-      font-weight: 600;
-      margin-bottom: 24px;
-      color: #e2d9ff;
-    }
-    .free-badge .dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; animation: blink 1.5s infinite; }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-
-    /* ─── NUMBERS BAR ─── */
-    .numbers-bar {
-      background: var(--dark3);
-      border-top: 1px solid rgba(255,255,255,0.06);
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-      padding: 24px 0;
-    }
-    .numbers-bar .container { display: flex; justify-content: center; gap: 48px; flex-wrap: wrap; }
-    .nb-item { text-align: center; }
-    .nb-num {
-      font-size: 30px; font-weight: 900;
-      background: var(--gradient);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-      display: block; line-height: 1;
-    }
-    .nb-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; display: block; }
+    /* ─── STORY (abertura emocional) ─── */
+    .story-open { background: var(--dark); padding: 80px 20px; }
+    .story-open .container { max-width: 700px; }
+    .story-open p { font-size: 17px; line-height: 1.85; color: #ddd; margin-bottom: 18px; }
+    .story-open p.emphasis { font-size: 19px; font-weight: 700; color: #fff; }
+    .story-open p.small { font-size: 14px; color: var(--text-muted); }
+    .story-open .check-list { list-style: none; margin: 24px 0; }
+    .story-open .check-list li { padding: 8px 0 8px 30px; position: relative; font-size: 15.5px; color: #eee; }
+    .story-open .check-list li::before { content: '✅'; position: absolute; left: 0; }
 
     /* ─── PAIN SECTION ─── */
     .pain-section { background: var(--dark2); padding: 72px 0; text-align: center; }
@@ -201,62 +110,26 @@
     .product-features { list-style: none; margin-bottom: 24px; }
     .product-features li { font-size: 14px; color: var(--text-muted); padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
     .product-features li:last-child { border: none; }
+    .product-features li.bonus-item { color: #f9a8d4; }
     .btn-product { display: block; text-align: center; padding: 16px; border-radius: 50px; font-size: 15px; font-weight: 700; cursor: pointer; border: none; transition: all 0.2s; text-decoration: none; }
     .btn-product-primary { background: var(--gradient); color: #fff; box-shadow: 0 6px 24px rgba(233,30,140,0.35); }
     .btn-product:hover { transform: translateY(-2px); opacity: 0.9; }
 
     /* ─── FREEMIUM BANNER ─── */
-    .freemium-banner {
-      background: rgba(34,197,94,0.08);
-      border: 1px solid rgba(34,197,94,0.25);
-      border-radius: 16px;
-      padding: 20px 24px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 28px;
-    }
+    .freemium-banner { background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.25); border-radius: 16px; padding: 20px 24px; display: flex; align-items: center; gap: 16px; margin-bottom: 28px; }
     .freemium-icon { font-size: 32px; flex-shrink: 0; }
     .freemium-banner h4 { font-size: 16px; font-weight: 700; color: #22c55e; margin-bottom: 4px; }
     .freemium-banner p { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
 
     /* ─── PREVIEW OPTIONS ─── */
     .preview-options { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 16px; }
-    .btn-buy-mp3 {
-      background: var(--gradient); color: #fff; border: none;
-      padding: 16px 12px; border-radius: 14px; font-size: 14px; font-weight: 700;
-      cursor: pointer; text-align: center; transition: all 0.2s;
-      box-shadow: 0 4px 20px rgba(233,30,140,0.35); line-height: 1.4;
-    }
-    .btn-buy-video {
-      background: rgba(123,47,190,0.15);
-      border: 1px solid rgba(123,47,190,0.4);
-      color: #c4b5fd; padding: 16px 12px; border-radius: 14px;
-      font-size: 14px; font-weight: 700; cursor: pointer;
-      text-align: center; transition: all 0.2s; line-height: 1.4;
-    }
+    .btn-buy-mp3 { background: var(--gradient); color: #fff; border: none; padding: 16px 12px; border-radius: 14px; font-size: 14px; font-weight: 700; cursor: pointer; text-align: center; transition: all 0.2s; box-shadow: 0 4px 20px rgba(233,30,140,0.35); line-height: 1.4; }
+    .btn-buy-video { background: rgba(123,47,190,0.15); border: 1px solid rgba(123,47,190,0.4); color: #c4b5fd; padding: 16px 12px; border-radius: 14px; font-size: 14px; font-weight: 700; cursor: pointer; text-align: center; transition: all 0.2s; line-height: 1.4; }
     .btn-buy-mp3:hover, .btn-buy-video:hover { transform: translateY(-2px); opacity: 0.9; }
     .preview-note { text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 10px; }
 
-    /* ─── STORIES ─── */
-    .stories-section { padding: 80px 0; background: var(--dark); }
-    .story-card { background: var(--dark2); border: 1px solid rgba(255,255,255,0.07); border-radius: 20px; padding: 28px; margin-bottom: 20px; }
-    .story-header { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
-    .story-avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--gradient); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; flex-shrink: 0; color: #fff; }
-    .story-name { font-weight: 700; font-size: 15px; }
-    .story-location { font-size: 12px; color: var(--text-muted); }
-    .story-stars { color: #fbbf24; font-size: 13px; margin-bottom: 10px; letter-spacing: 2px; }
-    .story-text { color: #ccc; line-height: 1.7; font-size: 15px; font-style: italic; }
-    .story-highlight { background: rgba(233,30,140,0.1); border-left: 3px solid #E91E8C; padding: 10px 14px; border-radius: 6px; font-size: 14px; color: #f9a8d4; margin-top: 12px; }
-
     /* ─── FORM / CTA ─── */
-    .btn-generate-xl {
-      width: 100%; padding: 22px; font-size: 20px; font-weight: 800;
-      background: var(--gradient); border: none; border-radius: 50px; color: #fff; cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
-      animation: pulse 2.5s ease-in-out infinite;
-      box-shadow: 0 8px 32px rgba(233,30,140,0.4);
-    }
+    .btn-generate-xl { width: 100%; padding: 22px; font-size: 20px; font-weight: 800; background: var(--gradient); border: none; border-radius: 50px; color: #fff; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; animation: pulse 2.5s ease-in-out infinite; box-shadow: 0 8px 32px rgba(233,30,140,0.4); }
     .btn-generate-xl:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(233,30,140,0.5); }
     .btn-generate-xl:disabled { opacity: 0.6; cursor: not-allowed; animation: none; transform: none; }
     .micro-copy { text-align: center; font-size: 13px; color: var(--text-muted); margin-top: 10px; }
@@ -273,30 +146,26 @@
     .obj-q { font-weight: 700; font-size: 15px; margin-bottom: 8px; }
     .obj-a { color: var(--text-muted); font-size: 14px; line-height: 1.6; }
 
+    /* ─── GARANTIA ─── */
+    .guarantee-section { padding: 80px 0; background: var(--dark); text-align: center; }
+    .guarantee-shield { font-size: 56px; margin-bottom: 16px; }
+    .guarantee-section h2 { font-size: clamp(22px,4vw,32px); margin-bottom: 12px; }
+    .guarantee-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap: 20px; max-width: 800px; margin: 36px auto; text-align: left; }
+    .guarantee-card { background: var(--dark3); border: 1px solid rgba(233,30,140,0.25); border-radius: 18px; padding: 26px; }
+    .guarantee-card h4 { font-size: 15px; color: #f9a8d4; margin-bottom: 10px; }
+    .guarantee-card p { font-size: 13.5px; color: var(--text-muted); line-height: 1.6; }
+    .guarantee-badges { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 30px; }
+    .guarantee-badge { background: var(--dark3); border: 1px solid var(--border); padding: 8px 16px; border-radius: 50px; font-size: 12px; color: var(--text-muted); }
+
     /* ─── MOBILE ─── */
     @media (max-width: 640px) {
-      /* Nav vira sticky no mobile: gruda no topo mas só depois de rolar */
-      nav.nav {
-        position: sticky !important;
-        top: 40px !important;  /* abaixo da top-bar fixa */
-      }
-      /* Hero agora é o 1º elemento: só precisa desviar da top-bar (40px) */
-      .hero {
-        margin-top: 40px !important;
-        padding-top: 40px !important;
-      }
-      /* Value-trio vem depois do hero, sem margin-top extra */
-      .value-trio { margin-top: 0 !important; }
-
+      nav.nav { position: sticky !important; top: 40px !important; }
       .pain-vs { grid-template-columns: 1fr; }
       .preview-options { grid-template-columns: 1fr; }
-      .numbers-bar .container { gap: 24px; }
       .value-trio-inner { grid-template-columns: 1fr; }
       .vtrio-card { padding: 18px 16px; }
       .float-cta { flex-direction: column; gap: 4px; padding: 10px 16px 14px; }
       .float-cta a { padding: 13px 28px; font-size: 15px; }
-      /* Título principal — menor para caber sem cortar no mobile */
-      .hero h1 { font-size: clamp(1.7rem, 8vw, 2.2rem) !important; line-height: 1.2; }
     }
   </style>
 </head>
@@ -308,40 +177,40 @@
 </div>
 
 <!-- ─── NAV ─── -->
-<nav class="nav">
+<nav class="nav" id="mainNav">
   <div class="logo">🎵 SuaMúsicaAI</div>
-  <span style="font-size:12px;color:rgba(160,155,184,0.7);">Preview 30s · 100% grátis</span>
+  <span style="font-size:12px;color:rgba(160,155,184,0.7);">Preview grátis · 100%</span>
 </nav>
 
-<!-- ══════════ HERO ══════════ -->
-<header class="hero" style="padding-top: 60px;">
-  <div class="hero-bg"></div>
-  <div class="hero-content">
+<!-- ══════════ HERO / BILLBOARD ══════════ -->
+<header class="nf-hero">
+  <div class="nf-hero-bg"></div>
+  <div class="nf-hero-content">
 
-    <div class="free-badge">
-      <span class="dot"></span>
-      Preview 30s grátis · Sem cadastro · Sem cartão
-    </div>
+    <span class="nf-eyebrow">🎧 Ouça o preview ANTES de decidir</span>
 
-    <h1>
-      Ela vai <span class="gradient-text">chorar de emoção</span> ouvindo essa música
-    </h1>
+    <h1>Faça Ela Chorar de Emoção <span class="gradient-text">Ou Você Não Paga</span> Um Centavo</h1>
 
-    <p class="hero-sub">
-      Nossa IA compõe uma música com <strong>o nome dela</strong>, <strong>a história de vocês</strong>
-      e o estilo que ela ama — sertanejo, MPB, pop, pagode.<br><br>
-      <strong>Ouça os primeiros 40 segundos de graça. Só paga se amar.</strong>
-      Escolha o MP3 completo ou um Vídeo com a letra animada.
+    <p class="nf-sub">
+      Transforme a história real do relacionamento de vocês em uma música profissional
+      com <strong>o nome dela na letra</strong> — sem gastar R$500 com músico, sem parecer genérico.
+      Ouça o preview grátis primeiro. Só paga se amar.
     </p>
 
-    <div class="hero-stats">
-      <div class="stat"><strong>+2.400</strong><span>músicas criadas</span></div>
-      <div class="stat"><strong>4.9★</strong><span>avaliação média</span></div>
-      <div class="stat"><strong>&lt;3 min</strong><span>preview pronto</span></div>
+    <!-- VSL -->
+    <div class="vsl-frame" id="vslFrame">
+      <div class="vsl-play-icon">▶</div>
+      <p class="vsl-note">Vídeo em produção — em breve aqui</p>
+      <p class="vsl-sound">🔊 Ative o som quando o vídeo estiver no ar</p>
     </div>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:28px;">Não pode assistir agora? Role para baixo e leia a página completa ↓</p>
 
-    <a href="#criar" class="btn-hero">🎧 Ouvir meu preview grátis agora</a>
-    <p class="hero-hint">Sem cadastro · Sem cartão · Sem risco</p>
+    <a href="#criar" class="btn-hero">🎵 Criar Minha Música Grátis Agora — Ouvir em 3 Minutos</a>
+    <p class="hero-hint">💰 A partir de R$19,90 (menos que flores) · 🎧 Preview 100% grátis · ✅ Não gostou? Não paga nada</p>
+
+    <div class="countdown-box" id="countdownBox">
+      ⏰ Oferta desta semana expira em: <strong id="countdownText">--:--:--</strong>
+    </div>
 
   </div>
 </header>
@@ -349,63 +218,89 @@
 <!-- ─── VALUE TRIO ─── -->
 <div class="value-trio">
   <div class="value-trio-inner">
-
     <div class="vtrio-card">
       <div class="vtrio-icon">🎧</div>
       <div>
-        <div class="vtrio-title">Ouve 40 segundos. Grátis. Agora.</div>
-        <div class="vtrio-desc">
-          Preenche o formulário e em <strong>menos de 3 minutos</strong> sua música fica pronta.
-          Sem cartão. Sem cadastro. Você ouve primeiro, <strong>decide depois</strong>.
-        </div>
+        <div class="vtrio-title">Ouve grátis. Agora.</div>
+        <div class="vtrio-desc">Responde 7 perguntinhas rápidas e em <strong>menos de 3 minutos</strong> sua música fica pronta. Sem cartão. Sem cadastro. Você ouve primeiro, <strong>decide depois</strong>.</div>
       </div>
     </div>
-
     <div class="vtrio-card">
       <div class="vtrio-icon">🥹</div>
       <div>
-        <div class="vtrio-title">O nome dela vai estar na letra.</div>
-        <div class="vtrio-desc">
-          Nossa IA não usa template. Ela compõe uma música <strong>única</strong>
-          com o nome dela, a sua memória e o estilo que ela ama.
-          <strong>Nunca existiu antes. Nunca vai existir igual.</strong>
-        </div>
+        <div class="vtrio-title">O nome dela na letra.</div>
+        <div class="vtrio-desc">Não é template com nome colado. É uma composição <strong>única</strong>, com a sua história real. <strong>Nunca existiu antes. Nunca vai existir igual.</strong></div>
       </div>
     </div>
-
     <div class="vtrio-card">
       <div class="vtrio-icon">🛡️</div>
       <div>
-        <div class="vtrio-title">Não amou? Não paga. Simples assim.</div>
-        <div class="vtrio-desc">
-          Se o preview não te impressionar, fecha a página.
-          <strong>Sem cobrança. Sem processo. Sem conversa.</strong>
-          Risco zero — porque temos certeza que você vai amar.
-        </div>
+        <div class="vtrio-title">Não amou? Não paga.</div>
+        <div class="vtrio-desc">Se o preview não te impressionar, fecha a página. <strong>Sem cobrança. Sem processo.</strong> Risco zero — o risco é todo nosso.</div>
       </div>
     </div>
-
   </div>
-  <div class="vtrio-proof">
-    <span><b>2.431</b> músicas criadas</span>
-    <span>·</span>
-    <span><b>4.9★</b> avaliação média</span>
-    <span>·</span>
-    <span><b>98%</b> compraram após ouvir</span>
-    <span>·</span>
+  <div class="vtrio-proof" id="vtrioProof">
     <span>PIX ou cartão · aprovação em minutos</span>
+    <span>·</span>
+    <span>Preview sempre grátis</span>
   </div>
 </div>
 
-<!-- ─── NÚMEROS ─── -->
-<div class="numbers-bar">
+<!-- ══════════ ABERTURA / CONEXÃO ══════════ -->
+<section class="story-open">
   <div class="container">
-    <div class="nb-item"><span class="nb-num">2.431</span><span class="nb-label">músicas criadas</span></div>
-    <div class="nb-item"><span class="nb-num">4.9★</span><span class="nb-label">avaliação média</span></div>
-    <div class="nb-item"><span class="nb-num">98%</span><span class="nb-label">compraram após ouvir</span></div>
-    <div class="nb-item"><span class="nb-num">100%</span><span class="nb-label">personalizada</span></div>
+    <p>É quinta-feira à noite. Você está rolando o Instagram antes de dormir.</p>
+    <p>De repente, aparece um post de um casal que você conhece. Ela chorando de felicidade, com um texto grande sobre o presente "mais especial que já recebeu". Um monte de gente comentando "que namorado incrível".</p>
+    <p>Você olha pro lado, ela distraída no celular. E pensa: <em>"quando foi a última vez que ela reagiu assim comigo?"</em></p>
+    <p class="emphasis">A verdade é que presente genérico não é sobre falta de amor. É sobre expectativa.</p>
+    <p>Flores que murcham em 3 dias. Perfume que o ex também deu. Jantar que vira 1 foto e é esquecido na semana seguinte.</p>
+    <p>Mas existe uma forma diferente: um presente que</p>
+    <ul class="check-list">
+      <li>Faz ela sentir emoção de verdade (não fabricada)</li>
+      <li>É completamente único — nunca existiu igual</li>
+      <li>Tem o nome dela na letra</li>
+      <li>Fica pronto em 3 minutos</li>
+      <li>Custa menos que um jantar romântico</li>
+      <li>Você ouve <strong>grátis</strong> antes de decidir</li>
+    </ul>
+    <p class="emphasis">Não é uma música genérica onde só trocam o nome. É uma composição original criada por IA a partir da história real de vocês.</p>
+    <p class="small">Continue lendo pra ver como funciona.</p>
   </div>
-</div>
+</section>
+
+<!-- ══════════ FALSAS SOLUÇÕES (fileira estilo Netflix) ══════════ -->
+<section class="nf-row-section" style="background:var(--dark2);">
+  <div class="nf-row-header">
+    <h2>Por que as outras soluções não funcionam</h2>
+    <p>Você provavelmente já tentou pelo menos uma dessas</p>
+  </div>
+  <div class="nf-row-track">
+    <div class="nf-card nf-card-bad">
+      <span class="nf-card-icon">💎</span>
+      <h4>❌ Presente caro</h4>
+      <p>Joia, perfume importado — o investimento não garante a emoção que você espera. Dinheiro compra objeto, não memória.</p>
+    </div>
+    <div class="nf-card nf-card-bad">
+      <span class="nf-card-icon">🎸</span>
+      <h4>❌ Contratar um músico</h4>
+      <p>R$500-2.000, semanas de espera, você paga antes de ouvir qualquer coisa. Caro, demorado, sem garantia.</p>
+    </div>
+    <div class="nf-card nf-card-bad">
+      <span class="nf-card-icon">🎉</span>
+      <h4>❌ Surpresa elaborada</h4>
+      <p>Semanas de planejamento, muito trabalho, e o resultado nem sempre corresponde ao esforço investido.</p>
+    </div>
+    <div class="nf-card nf-card-bad">
+      <span class="nf-card-icon">📸</span>
+      <h4>❌ Vídeo com fotos</h4>
+      <p>Genérico — todo mundo já fez. Música de fundo clichê, sem conexão profunda com a história de vocês.</p>
+    </div>
+  </div>
+  <div class="nf-row-header" style="margin-top:8px;">
+    <p><strong style="color:#fff;">O que você precisa:</strong> algo único, rápido, barato, com garantia de emoção — e é exatamente isso que a IA entrega.</p>
+  </div>
+</section>
 
 <!-- ══════════ O PROBLEMA ══════════ -->
 <section class="pain-section">
@@ -413,8 +308,7 @@
     <h2>Chega de presente que ela vai esquecer em uma semana</h2>
     <p class="lead">
       Flores murcham. Perfume todo mundo dá. Jantar ela já esqueceu.
-      Uma música com o nome dela e a história de vocês?
-      <strong>Isso fica pra sempre.</strong>
+      Uma música com o nome dela e a história de vocês? <strong>Isso fica pra sempre.</strong>
     </p>
     <div class="pain-vs">
       <div class="pain-col bad">
@@ -441,84 +335,11 @@
   </div>
 </section>
 
-<!-- ══════════ PRODUTOS ══════════ -->
-<section class="products-section">
-  <div class="container">
-    <h2>Três formas. Uma história inesquecível.</h2>
-    <p class="section-sub">Escolha após ouvir o preview grátis</p>
-    <div class="products-grid">
-
-      <div class="product-card">
-        <div class="product-tag">🎵 MAIS VENDIDO</div>
-        <span class="product-icon">🎵</span>
-        <h3>MP3 Completo</h3>
-        <p class="product-desc">
-          Arquivo MP3 da música completa (3–4 minutos) com a letra personalizada, o nome dela e a melodia no estilo que você escolheu.
-          Manda pelo WhatsApp, Instagram, coloca como toque.
-        </p>
-        <div class="product-price">R$19<small>,90</small></div>
-        <div class="product-speed">⚡ Preview + entrega em menos de 3 minutos</div>
-        <ul class="product-features">
-          <li>✓ MP3 de 3–4 minutos completo</li>
-          <li>✓ Letra com o nome dela</li>
-          <li>✓ Sua memória especial na letra</li>
-          <li>✓ Sertanejo, MPB, pop, pagode, gospel</li>
-          <li>✓ Download no email automaticamente</li>
-          <li>✓ Pode postar nas redes sociais</li>
-        </ul>
-        <a href="#criar" class="btn-product btn-product-primary">🎧 Ouvir preview grátis →</a>
-      </div>
-
-      <div class="product-card featured">
-        <div class="product-tag">🎬 MAIS IMPACTANTE</div>
-        <span class="product-icon">🎬</span>
-        <h3>Vídeo com a Letra</h3>
-        <p class="product-desc">
-          Além do MP3, você recebe um <strong>vídeo animado com a letra da música</strong> aparecendo sincronizada — igual a um lyric video.
-          Perfeito para mandar no WhatsApp e explodir nas redes.
-        </p>
-        <div class="product-price">R$39<small>,90</small></div>
-        <div class="product-speed">⚡ Entrega em até 12 horas</div>
-        <ul class="product-features">
-          <li>✓ Tudo do MP3 completo</li>
-          <li>✓ <strong>Vídeo MP4 com letra animada</strong></li>
-          <li>✓ Fundo visual personalizado</li>
-          <li>✓ Pronto pra postar no Instagram/TikTok</li>
-          <li>✓ Formato perfeito para Stories</li>
-          <li>✓ Download do MP3 + MP4</li>
-        </ul>
-        <a href="#criar" class="btn-product btn-product-primary">🎧 Ouvir preview grátis →</a>
-      </div>
-
-      <div class="product-card featured">
-        <div class="product-tag">💌 MELHOR CUSTO-BENEFÍCIO</div>
-        <span class="product-icon">🎁</span>
-        <h3>Pacote Presente</h3>
-        <p class="product-desc">
-          O mesmo preço do Vídeo avulso, mas rende <strong>3 músicas completas</strong> — pra namorada, mãe e melhor amiga, por exemplo.
-          Cada uma vem com uma <strong>carta de amor escrita por IA</strong> de bônus, sem custo extra.
-        </p>
-        <div class="product-price">R$39<small>,90</small></div>
-        <div class="product-speed">⚡ Créditos não expiram — crie quando quiser</div>
-        <ul class="product-features">
-          <li>✓ 3 músicas completas (3–4 min cada)</li>
-          <li>✓ 3 cartas de amor por IA — bônus incluso</li>
-          <li>✓ Uma pra cada pessoa especial da sua vida</li>
-          <li>✓ Pode postar nas redes sociais</li>
-          <li>✓ Download no email automaticamente</li>
-        </ul>
-        <a href="#criar" class="btn-product btn-product-primary">🎧 Ouvir preview grátis →</a>
-      </div>
-
-    </div>
-  </div>
-</section>
-
 <!-- ══════════ COMO FUNCIONA ══════════ -->
 <section class="how-it-works">
   <div class="container">
     <h2>Como funciona</h2>
-    <p class="section-sub">Tão simples que você cria em 2 minutos</p>
+    <p class="section-sub">Tão simples que você cria em 3 minutos</p>
     <div class="steps">
       <div class="step">
         <div class="step-num">1</div>
@@ -531,13 +352,13 @@
         <div class="step-num">2</div>
         <div class="step-icon">🤖</div>
         <h3>IA compõe</h3>
-        <p>Em 3 minutos a IA escreve a letra com o nome dela e cria a melodia no estilo que você escolheu.</p>
+        <p>Em minutos a IA escreve a letra com o nome dela e cria a melodia no estilo que você escolheu.</p>
       </div>
       <div class="step-arrow">→</div>
       <div class="step">
         <div class="step-num">3</div>
         <div class="step-icon">🎧</div>
-        <h3>Ouve 30s grátis</h3>
+        <h3>Ouve grátis</h3>
         <p><strong>Sem pagar nada</strong>, você ouve os primeiros 40 segundos. Gostou? Escolhe o formato e paga.</p>
       </div>
       <div class="step-arrow">→</div>
@@ -545,50 +366,19 @@
         <div class="step-num">4</div>
         <div class="step-icon">🥹</div>
         <h3>Ela chora</h3>
-        <p>Manda o MP3 ou vídeo pelo WhatsApp. Uma música com o nome dela, feita só pra ela.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ══════════ EXEMPLOS ══════════ -->
-<section class="examples">
-  <div class="container">
-    <h2>Músicas criadas pela nossa IA</h2>
-    <p class="section-sub">Histórias reais, músicas únicas</p>
-    <div class="examples-grid">
-      <div class="example-card">
-        <div class="example-badge">Sertanejo romântico</div>
-        <h3>🤠 "Dois Anos Com Você"</h3>
-        <p>"Para o Pedro, que me conquista todo dia com sua paciência e dedicação..."</p>
-        <audio controls src="/audio/pedro.mp3" style="width:100%;margin-top:10px;border-radius:8px;"></audio>
-        <p style="font-size:12px;color:#f9a8d4;margin-top:12px;">💬 "Quando ouviu o nome dele na música ele travou de emoção" — Camila, SP</p>
-      </div>
-      <div class="example-card">
-        <div class="example-badge">MPB</div>
-        <h3>🌸 "Obrigada, Mãe"</h3>
-        <p>"Minha mãe Tereza que acordava cedo todo dia pra me levar na escola..."</p>
-        <audio controls src="/audio/tereza.mp3" style="width:100%;margin-top:10px;border-radius:8px;"></audio>
-        <p style="font-size:12px;color:#f9a8d4;margin-top:12px;">💬 "Minha mãe usou como toque do celular e mostra pra todo mundo" — Rafael, MG</p>
-      </div>
-      <div class="example-card">
-        <div class="example-badge">Pop</div>
-        <h3>🤝 "Amizade Pra Vida"</h3>
-        <p>"Minha melhor amiga Júlia, 15 anos de amizade, sempre do meu lado..."</p>
-        <audio controls src="/audio/julia.mp3" style="width:100%;margin-top:10px;border-radius:8px;"></audio>
-        <p style="font-size:12px;color:#f9a8d4;margin-top:12px;">💬 "Postou no stories, bombou nos direct e todo mundo quis saber como fiz" — Gustavo, PR</p>
+        <p>Manda pelo WhatsApp. Uma música com o nome dela, feita só pra ela.</p>
       </div>
     </div>
   </div>
 </section>
 
 <!-- ══════════ DEPOIMENTOS (reais, carregados via /api/reviews/approved -- nunca fabricados) ══════════ -->
-<section class="stories-section" id="storiesSection" style="display:none;">
-  <div class="container" style="max-width:780px;">
-    <h2 style="text-align:center;">Histórias de quem usou</h2>
-    <p class="section-sub" style="text-align:center; margin-bottom:40px;" id="storiesSubtitle">Avaliações reais de clientes</p>
-    <div id="storiesGrid"></div>
+<section class="nf-row-section" id="storiesSection" style="display:none;">
+  <div class="nf-row-header">
+    <h2>Histórias de quem usou</h2>
+    <p id="storiesSubtitle">Avaliações reais de clientes</p>
   </div>
+  <div class="nf-row-track" id="storiesGrid"></div>
 </section>
 
 <!-- ══════════ QUIZ ══════════ -->
@@ -706,7 +496,7 @@
             <input type="email" id="emailEntrega" class="quiz-input" placeholder="seu@email.com" autocomplete="off" required />
             <small class="quiz-privacy">🔒 Só usamos pra enviar sua música. Zero spam.</small>
             <button type="submit" id="generateBtn" class="btn-generate-xl">
-              🎧 Ouvir meu preview grátis agora
+              🎵 Criar Minha Música Grátis Agora
             </button>
             <div class="micro-copy">
               <span>✅ Sem cadastro</span>
@@ -752,17 +542,17 @@
               </button>
               <button type="button" id="buyBtnVideo" class="btn-buy-video btn-buy-featured">
                 🔥 Mais escolhido<br>🎬 MP3 + Vídeo com Letra<br>
-                <span style="font-size:12px;font-weight:400;opacity:0.85;">Arquivo MP4 animado · R$39,90</span>
+                <span style="font-size:12px;font-weight:400;opacity:0.85;">+ 4 bônus inclusos · R$39,90</span>
               </button>
               <button type="button" id="buyBtnPack3" class="btn-buy-video">
                 💌 Pacote Presente<br>🎵×3 + Carta de Amor<br>
-                <span style="font-size:12px;font-weight:400;opacity:0.85;">3 músicas + 3 cartas · R$39,90</span>
+                <span style="font-size:12px;font-weight:400;opacity:0.85;">+ 4 bônus inclusos · R$39,90</span>
               </button>
             </div>
-            <p class="preview-note">PIX ou cartão · Entrega no email · Aprovação em minutos · Garantia total até a entrega</p>
+            <p class="preview-note">PIX ou cartão · Entrega no email · Aprovação em minutos · Garantia dupla</p>
           </div>
 
-          <!-- CTA pós-30s (aparece depois que o preview termina) -->
+          <!-- CTA pós-40s (aparece depois que o preview termina) -->
           <div id="post30Cta" style="display:none;margin-top:20px;background:rgba(233,30,140,0.1);border:1px solid rgba(233,30,140,0.4);border-radius:16px;padding:22px;text-align:center;">
             <p style="font-size:18px;font-weight:800;color:#fff;margin:0 0 8px;">
               <span id="post30Nome"></span>, o que achou? 🥹
@@ -777,11 +567,11 @@
               </button>
               <button type="button" onclick="openCheckout('video')" class="btn-buy-video btn-buy-featured" style="animation:pulse 2s ease-in-out infinite;">
                 🔥 MP3 + Vídeo + Letra<br>
-                <span style="font-size:12px;font-weight:400;opacity:0.85;">MP4 animado · R$39,90</span>
+                <span style="font-size:12px;font-weight:400;opacity:0.85;">+ 4 bônus · R$39,90</span>
               </button>
               <button type="button" onclick="openCheckout('pack3')" class="btn-buy-video">
                 💌 Pacote Presente (3 músicas)<br>
-                <span style="font-size:12px;font-weight:400;opacity:0.85;">+ 3 cartas de amor de bônus · R$39,90</span>
+                <span style="font-size:12px;font-weight:400;opacity:0.85;">+ 4 bônus · R$39,90</span>
               </button>
             </div>
           </div>
@@ -798,6 +588,105 @@
   </div>
 </section>
 
+<!-- ══════════ PRODUTOS + BÔNUS ══════════ -->
+<section class="products-section">
+  <div class="container">
+    <h2>Três formas. Uma história inesquecível.</h2>
+    <p class="section-sub">Escolha após ouvir o preview grátis</p>
+    <div class="products-grid">
+
+      <div class="product-card">
+        <div class="product-tag">🎵 ENTRADA</div>
+        <span class="product-icon">🎵</span>
+        <h3>MP3 Completo</h3>
+        <p class="product-desc">
+          Arquivo MP3 da música completa (3–4 minutos) com a letra personalizada, o nome dela e a melodia no estilo que você escolheu.
+        </p>
+        <div class="product-price">R$19<small>,90</small></div>
+        <div class="product-speed">⚡ Preview + entrega em minutos</div>
+        <ul class="product-features">
+          <li>✓ MP3 de 3–4 minutos completo</li>
+          <li>✓ Letra com o nome dela</li>
+          <li>✓ Sua memória especial na letra</li>
+          <li>✓ 6 estilos musicais à escolha</li>
+          <li>✓ Download no email automaticamente</li>
+          <li>✓ Pode postar nas redes sociais</li>
+        </ul>
+        <a href="#criar" class="btn-product btn-product-primary">🎧 Ouvir preview grátis →</a>
+      </div>
+
+      <div class="product-card featured">
+        <div class="product-tag">🎬 MAIS ESCOLHIDO</div>
+        <span class="product-icon">🎬</span>
+        <h3>Vídeo com a Letra</h3>
+        <p class="product-desc">
+          Além do MP3, você recebe um <strong>vídeo animado com a letra da música</strong> aparecendo sincronizada — pronto pra Stories, TikTok e WhatsApp.
+        </p>
+        <div class="product-price">R$39<small>,90</small></div>
+        <div class="product-speed">⚡ Entrega em até 12 horas</div>
+        <ul class="product-features">
+          <li>✓ Tudo do MP3 completo</li>
+          <li>✓ <strong>Vídeo MP4 com letra animada</strong></li>
+          <li>✓ Pronto pra postar no Instagram/TikTok</li>
+          <li class="bonus-item">🎁 Bônus: 10 Mensagens Românticas Prontas</li>
+          <li class="bonus-item">🎁 Bônus: Guia Como Postar Sem Parecer Forçado</li>
+          <li class="bonus-item">🎁 Bônus: Calendário de Ideias 12 Meses</li>
+          <li class="bonus-item">🎁 Bônus: Os 7 Erros Que Matam a Emoção</li>
+        </ul>
+        <a href="#criar" class="btn-product btn-product-primary">🎧 Ouvir preview grátis →</a>
+      </div>
+
+      <div class="product-card featured">
+        <div class="product-tag">💌 MELHOR CUSTO-BENEFÍCIO</div>
+        <span class="product-icon">🎁</span>
+        <h3>Pacote Presente</h3>
+        <p class="product-desc">
+          O mesmo preço do Vídeo avulso, mas rende <strong>3 músicas completas</strong> — pra namorada, mãe e melhor amiga, por exemplo.
+        </p>
+        <div class="product-price">R$39<small>,90</small></div>
+        <div class="product-speed">⚡ Créditos não expiram</div>
+        <ul class="product-features">
+          <li>✓ <strong>3 músicas completas</strong> (uma de cada vez)</li>
+          <li>✓ 3 cartas de amor por IA — inclusas</li>
+          <li>✓ Perfeita pra mais de uma pessoa especial</li>
+          <li class="bonus-item">🎁 + os mesmos 4 bônus do Vídeo</li>
+        </ul>
+        <a href="#criar" class="btn-product btn-product-primary">🎧 Ouvir preview grátis →</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ BENEFÍCIOS (fileira Netflix) ══════════ -->
+<section class="nf-row-section" style="background:var(--dark2);">
+  <div class="nf-row-header">
+    <h2>Ao criar hoje, você vai</h2>
+  </div>
+  <div class="nf-row-track">
+    <div class="nf-card"><span class="nf-card-icon">🥹</span><h4>Fazer ela chorar de emoção</h4><p>Uma música com o próprio nome dela e a história real de vocês tem um impacto emocional que presente genérico não alcança.</p></div>
+    <div class="nf-card"><span class="nf-card-icon">💸</span><h4>Parar de gastar em presente esquecível</h4><p>Flor murcha em 3 dias. Sua música dura pra sempre e custa a partir de R$19,90.</p></div>
+    <div class="nf-card"><span class="nf-card-icon">⏱️</span><h4>Economizar horas de planejamento</h4><p>3 minutos pra criar em vez de semanas planejando uma surpresa elaborada.</p></div>
+    <div class="nf-card"><span class="nf-card-icon">🎧</span><h4>Ter certeza antes de gastar</h4><p>Preview grátis de 40 segundos — você só paga se amar o que ouviu.</p></div>
+    <div class="nf-card"><span class="nf-card-icon">📱</span><h4>Ter conteúdo pronto pra postar</h4><p>Vídeo já formatado pra Instagram, TikTok e Stories, se você escolher esse formato.</p></div>
+    <div class="nf-card"><span class="nf-card-icon">🎁</span><h4>Eliminar a ansiedade do "o que dar"</h4><p>Uma solução que funciona em qualquer ocasião, mesmo em cima da hora.</p></div>
+  </div>
+</section>
+
+<!-- ══════════ BÔNUS (fileira Netflix, conteúdo real) ══════════ -->
+<section class="nf-row-section">
+  <div class="nf-row-header">
+    <h2>Bônus inclusos nos pacotes Vídeo e Pacote Presente</h2>
+    <p>Conteúdo real, entregue junto com sua música — sem custo extra</p>
+  </div>
+  <div class="nf-row-track">
+    <div class="nf-card nf-card-bonus"><span class="nf-card-icon">💌</span><h4>10 Mensagens Românticas Prontas</h4><p>Pra mandar junto com a música e dobrar o impacto emocional.</p><a href="/bonus-mensagens.html" class="nf-card-link" target="_blank">Ver conteúdo →</a></div>
+    <div class="nf-card nf-card-bonus"><span class="nf-card-icon">📱</span><h4>Guia: Como Postar Sem Parecer Forçado</h4><p>Horários, legendas prontas e como criar expectativa antes de postar.</p><a href="/bonus-viralizar.html" class="nf-card-link" target="_blank">Ver conteúdo →</a></div>
+    <div class="nf-card nf-card-bonus"><span class="nf-card-icon">📅</span><h4>Calendário de Ideias — 12 Meses</h4><p>Uma ideia de presente ou gesto pra cada mês do ano, pra nunca mais ficar sem saber o que dar.</p><a href="/bonus-calendario.html" class="nf-card-link" target="_blank">Ver conteúdo →</a></div>
+    <div class="nf-card nf-card-bonus"><span class="nf-card-icon">📖</span><h4>Os 7 Erros Que Matam a Emoção</h4><p>Os erros mais comuns ao presentear — e como corrigir cada um deles.</p><a href="/bonus-erros.html" class="nf-card-link" target="_blank">Ver conteúdo →</a></div>
+  </div>
+</section>
+
 <!-- ══════════ OBJEÇÕES ══════════ -->
 <section class="objection-section">
   <div class="container">
@@ -808,24 +697,28 @@
         <div class="obj-a">Você ouve 40 segundos grátis antes de pagar qualquer coisa. Se não amar, fecha a página. Não será cobrado. Zero risco.</div>
       </div>
       <div class="obj-card">
-        <div class="obj-q">🎤 "A voz é de robô?"</div>
-        <div class="obj-a">Não. Usamos o Suno — a IA de música mais avançada do mundo. Vozes reais, instrumentos reais. Quem ouve não percebe que é IA.</div>
+        <div class="obj-q">🎤 "Vai soar robotizado? Ela vai perceber que é IA?"</div>
+        <div class="obj-a">Usamos o Suno — a IA de música mais avançada do mundo. Voz e instrumentos realistas. Teste você mesmo no preview grátis: seus próprios ouvidos confirmam.</div>
       </div>
       <div class="obj-card">
-        <div class="obj-q">⏱ "Quanto tempo demora?"</div>
-        <div class="obj-a">Preview grátis: menos de 3 minutos. MP3 completo: entregue em até 3 minutos após pagamento. Vídeo com letra: até 12 horas.</div>
+        <div class="obj-q">💰 "R$19,90 parece barato. Tem pegadinha?"</div>
+        <div class="obj-a">Sem cobrança recorrente, sem taxa oculta. Você paga uma vez e acabou. É barato porque é automatizado por IA — músico cobraria R$500-2.000 pelo mesmo tipo de resultado.</div>
+      </div>
+      <div class="obj-card">
+        <div class="obj-q">⏱ "E se eu não tiver tempo agora?"</div>
+        <div class="obj-a">Leva poucos minutos. Mesmo que seja 23h e a data especial seja amanhã, dá tempo.</div>
+      </div>
+      <div class="obj-card">
+        <div class="obj-q">🎵 "E se ela não gostar do estilo musical?"</div>
+        <div class="obj-a">Por isso existe o preview grátis. Não curtiu o estilo? Crie de novo em outro. Teste quantos quiser até acertar.</div>
+      </div>
+      <div class="obj-card">
+        <div class="obj-q">🔒 "Posso confiar no pagamento?"</div>
+        <div class="obj-a">Processamento seguro via Ticto, com SSL. Mesmas práticas de segurança usadas por grandes plataformas de pagamento no Brasil.</div>
       </div>
       <div class="obj-card">
         <div class="obj-q">📱 "Como entrego pra ela?"</div>
-        <div class="obj-a">Recebe no email: um arquivo MP3 ou MP4. Manda pelo WhatsApp, Instagram, coloca no status. Funciona em qualquer dispositivo.</div>
-      </div>
-      <div class="obj-card">
-        <div class="obj-q">🎵 "A letra vai ter o nome dela?"</div>
-        <div class="obj-a">Sim. Nossa IA inclui o nome dela, menciona a memória que você contou e cria uma música que só poderia ser sobre ela. Não é template.</div>
-      </div>
-      <div class="obj-card">
-        <div class="obj-q">📋 "Posso postar nas redes?"</div>
-        <div class="obj-a">Sim! Direitos de uso pessoal e redes sociais incluídos. Instagram, TikTok, WhatsApp, YouTube — pode postar em todos.</div>
+        <div class="obj-a">Recebe no email: MP3 ou MP4. Manda pelo WhatsApp, Instagram, coloca no status. Funciona em qualquer dispositivo.</div>
       </div>
       <div class="obj-card">
         <div class="obj-q">🤝 "E se eu pagar e a versão completa vier diferente do preview?"</div>
@@ -835,61 +728,27 @@
   </div>
 </section>
 
-<!-- ══════════ PREÇOS ══════════ -->
-<section class="pricing" id="precos">
+<!-- ══════════ GARANTIA ══════════ -->
+<section class="guarantee-section">
   <div class="container">
-    <h2>Preços</h2>
-    <p class="section-sub">Ouve grátis. Paga só se amar. Entrega automática.</p>
-    <div class="pricing-grid">
-
-      <div class="price-card">
-        <h3>MP3 · 1 Música</h3>
-        <div class="price">R$19<span class="cents">,90</span></div>
-        <ul>
-          <li>✓ MP3 completo (3–4 min)</li>
-          <li>✓ Letra com nome e história</li>
-          <li>✓ Uso pessoal e redes sociais</li>
-          <li>✓ Download no email em minutos</li>
-        </ul>
-        <a href="#criar" class="btn-price">Criar e ouvir grátis</a>
+    <div class="guarantee-shield">🛡️</div>
+    <h2>Garantia Dupla — "Ame ou Não Pague Nada"</h2>
+    <p style="color:var(--text-muted);max-width:560px;margin:0 auto;">O risco é todo nosso. Você só ganha, funcione ou não.</p>
+    <div class="guarantee-cards">
+      <div class="guarantee-card">
+        <h4>🎧 GARANTIA 1 — Preview 100% grátis</h4>
+        <p>Antes de pagar um único centavo: crie sua música, ouça o preview completo de 40 segundos, teste quantas vezes quiser. Só paga se amar.</p>
       </div>
-
-      <div class="price-card popular">
-        <div class="popular-badge">🔥 Mais escolhido</div>
-        <h3>🎬 Vídeo com Letra</h3>
-        <div class="price">R$39<span class="cents">,90</span></div>
-        <ul>
-          <li>✓ <strong>MP3 completo</strong> da sua música</li>
-          <li>✓ <strong>Vídeo MP4 animado</strong> com a letra</li>
-          <li>✓ Perfeito para Stories, WhatsApp e TikTok</li>
-          <li>✓ Pronto para postar nas redes sociais</li>
-          <li>✓ Entrega no email em até 10 min</li>
-        </ul>
-        <a href="#criar" class="btn-price">Criar e ouvir grátis</a>
+      <div class="guarantee-card">
+        <h4>💰 GARANTIA 2 — Se a completa não corresponder</h4>
+        <p>Mesmo depois de comprar, se a música completa não ficar tão boa quanto o preview te fez esperar, devolvemos 100% do valor. Sem perguntas, sem burocracia.</p>
       </div>
-
-      <div class="price-card premium">
-        <div class="popular-badge" style="background:linear-gradient(135deg,#7B2FBE,#3D0E6B);">💌 Melhor custo-benefício</div>
-        <h3>🎁 Pacote Presente</h3>
-        <div class="price">R$39<span class="cents">,90</span></div>
-        <div class="price-bonus">Mesmo preço do Vídeo avulso — mas rende <strong>3 músicas completas</strong></div>
-        <ul>
-          <li>✓ <strong>3 músicas completas</strong> (use quando quiser, uma de cada vez)</li>
-          <li>✓ <strong>3 cartas de amor escritas por IA</strong> de bônus — grátis</li>
-          <li>✓ Perfeita pra presentear mais de uma pessoa especial</li>
-          <li>✓ Créditos não expiram — cria quando quiser</li>
-        </ul>
-        <a href="#criar" class="btn-price">Criar e ouvir grátis</a>
-      </div>
-
     </div>
-
-    <div class="guarantee">
-      <span class="guarantee-icon">🛡️</span>
-      <div>
-        <strong>Garantia dupla — antes E depois da compra</strong>
-        <p>Todo pedido começa com um preview grátis de 40 segundos: você só compra se amar o que ouviu. E depois de comprar, se a versão completa não ficar tão boa quanto o preview, devolvemos 100% do valor. Sem burocracia, sem letra miúda.</p>
-      </div>
+    <div class="guarantee-badges">
+      <span class="guarantee-badge">🔒 Pagamento seguro (SSL)</span>
+      <span class="guarantee-badge">💳 Processado via Ticto</span>
+      <span class="guarantee-badge">✅ Sem cobrança recorrente</span>
+      <span class="guarantee-badge">📧 Suporte por email</span>
     </div>
   </div>
 </section>
@@ -900,28 +759,36 @@
     <h2>Dúvidas frequentes</h2>
     <div class="faq-list">
       <div class="faq-item">
-        <button class="faq-q">O preview é realmente grátis? Tem algum truque? <span>+</span></button>
-        <div class="faq-a">É 100% grátis. Você não precisa colocar cartão nem cadastrar. Preencheu o formulário → a IA compõe → você ouve os primeiros 40 segundos de graça. Só depois de ouvir você decide se quer comprar.</div>
+        <button class="faq-q">Como eu recebo o produto após a compra? <span>+</span></button>
+        <div class="faq-a">Após a confirmação do pagamento (PIX é quase instantâneo, cartão leva até alguns minutos), você recebe um email com o link de download. Todo o processo leva poucos minutos.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Qual é a garantia oferecida? <span>+</span></button>
+        <div class="faq-a">Garantia dupla: (1) preview 100% grátis antes de pagar qualquer coisa; (2) se mesmo depois de comprar a versão completa não ficar tão boa quanto o preview, devolvemos 100% do valor.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Isso é para mim? Quem deve comprar? <span>+</span></button>
+        <div class="faq-a">Ideal se você quer um presente único e memorável sem gastar R$500+ com músico, precisa de algo rápido (funciona até em cima da hora), e quer ver uma reação emocional genuína.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Quais são as opções de pagamento? <span>+</span></button>
+        <div class="faq-a">PIX (aprovação quase instantânea) e Cartão de Crédito, com opção de parcelamento no pacote de R$39,90. Processamento seguro via Ticto. Pagamento único, sem cobrança recorrente.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Posso realmente ouvir antes de pagar? <span>+</span></button>
+        <div class="faq-a">Sim, 100% grátis e sem compromisso. Você conta a história de vocês no quiz, escolhe o estilo, e ouve um preview de 40 segundos (já com o nome dela e parte da história) sem cadastrar cartão nem pagar nada.</div>
       </div>
       <div class="faq-item">
         <button class="faq-q">Qual a diferença entre MP3, Vídeo e Pacote Presente? <span>+</span></button>
-        <div class="faq-a">O MP3 Completo (R$19,90) entrega o áudio da música no seu email. O Vídeo com Letra (R$39,90) entrega o MP3 <strong>mais</strong> um vídeo MP4 animado com a letra aparecendo, pronto para WhatsApp, Stories e TikTok. O Pacote Presente (R$39,90 — mesmo preço do Vídeo) entrega <strong>3 músicas completas</strong>, cada uma com sua carta de amor por IA de bônus — ideal se você quer presentear mais de uma pessoa.</div>
-      </div>
-      <div class="faq-item">
-        <button class="faq-q">Como funciona a carta de amor de bônus do Pacote Presente? <span>+</span></button>
-        <div class="faq-a">Cada uma das 3 músicas do Pacote Presente vem com uma carta de amor escrita por IA a partir da mesma história que você contou — sem custo extra. Você recebe o link por email junto com a música, já liberada pra ler, imprimir ou enviar.</div>
+        <div class="faq-a">O MP3 Completo (R$19,90) entrega o áudio no seu email. O Vídeo com Letra (R$39,90) entrega o MP3 + vídeo MP4 animado + 4 bônus reais. O Pacote Presente (R$39,90) entrega 3 músicas completas + 3 cartas de amor + os mesmos 4 bônus — ideal se você quer presentear mais de uma pessoa.</div>
       </div>
       <div class="faq-item">
         <button class="faq-q">A letra vai ter o nome dela de verdade? <span>+</span></button>
-        <div class="faq-a">Sim. Nossa IA foi treinada para incluir o nome da pessoa na letra e usar a memória que você contou. Não é um template com o nome colado — é uma composição única que parte da história de vocês.</div>
-      </div>
-      <div class="faq-item">
-        <button class="faq-q">Como recebo após o pagamento? <span>+</span></button>
-        <div class="faq-a">Automaticamente por email. O MP3 chega em até 5 minutos após o pagamento. O Vídeo com Letra chega em até 10 minutos — inclui geração do vídeo animado. PIX aprova na hora, cartão em até 1 minuto.</div>
+        <div class="faq-a">Sim. A IA foi orientada a incluir o nome da pessoa na letra e usar a memória que você contou. Não é um template com o nome colado — é uma composição que parte da história de vocês.</div>
       </div>
       <div class="faq-item">
         <button class="faq-q">Posso dar a música de presente sem ela saber como foi feita? <span>+</span></button>
-        <div class="faq-a">Com certeza. A qualidade é tão boa que ninguém percebe que é IA. Você recebe o arquivo e manda pra ela do jeito que quiser. O que importa é a emoção que ela vai sentir.</div>
+        <div class="faq-a">Com certeza. Você recebe o arquivo e manda do jeito que quiser. O que importa é a emoção que ela vai sentir.</div>
       </div>
     </div>
   </div>
@@ -931,11 +798,12 @@
 <section class="cta-final">
   <div class="container">
     <h2>Ela vai lembrar desse presente para sempre</h2>
-    <p>Uma música com o nome dela. A história de vocês na letra. O estilo que ela ama.<br>Preview grátis em 3 minutos. Paga só se amar.</p>
-    <a href="#criar" class="btn-hero">🎧 Ouvir meu preview grátis agora →</a>
-    <p style="margin-top:16px;color:var(--text-muted);font-size:14px;">
-      Sem cadastro · Sem cartão · Sem risco
-    </p>
+    <p>Uma música com o nome dela. A história de vocês na letra. O estilo que ela ama.<br>Preview grátis em minutos. Paga só se amar.</p>
+    <a href="#criar" class="btn-hero">🎵 Criar Minha Música Grátis Agora →</a>
+    <p style="margin-top:12px;color:var(--text-muted);font-size:14px;">Sem cadastro · Sem cartão · Sem risco</p>
+    <div class="countdown-box" id="countdownBox2">
+      ⏰ Oferta desta semana expira em: <strong id="countdownText2">--:--:--</strong>
+    </div>
   </div>
 </section>
 
@@ -957,7 +825,7 @@
 
 <!-- ─── BOTÃO FLUTUANTE ─── -->
 <div class="float-cta" id="floatCta">
-  <a href="#criar">🎧 Criar minha música grátis agora</a>
+  <a href="#criar">🎵 Criar minha música grátis agora</a>
   <div class="float-cta-note">Sem cadastro · Sem cartão · Preview em 3 min</div>
 </div>
 

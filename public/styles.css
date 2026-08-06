@@ -735,6 +735,107 @@ textarea { resize: vertical; min-height: 100px; }
 
 .footer-small { font-size: 0.75rem; color: rgba(160,155,184,0.6); }
 
+/* ─── NAV estilo Netflix (transparente → sólida ao rolar) ─── */
+.nav { background: transparent; backdrop-filter: none; border-bottom: 1px solid transparent; transition: background 0.3s, border-color 0.3s, backdrop-filter 0.3s; }
+.nav.scrolled { background: rgba(13,13,26,0.96); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
+
+/* ─── HERO / BILLBOARD estilo Netflix ─── */
+.nf-hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 140px 24px 60px;
+  overflow: hidden;
+}
+.nf-hero-bg {
+  position: absolute; inset: 0; z-index: 0;
+  background:
+    linear-gradient(to top, var(--dark) 5%, rgba(13,13,26,0.55) 45%, rgba(13,13,26,0.15) 75%),
+    radial-gradient(ellipse 90% 60% at 50% 15%, rgba(233,30,140,0.25), transparent),
+    radial-gradient(ellipse 70% 50% at 85% 75%, rgba(123,47,190,0.22), transparent),
+    var(--dark);
+}
+.nf-hero-content { position: relative; z-index: 1; max-width: 760px; margin: 0 auto; text-align: center; }
+.nf-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(233,30,140,0.15); border: 1px solid rgba(233,30,140,0.35);
+  color: #F48CBB; padding: 7px 18px; border-radius: 50px; font-size: 0.82rem; font-weight: 700;
+  margin-bottom: 22px; letter-spacing: 0.3px;
+}
+.nf-hero h1 {
+  font-size: clamp(1.9rem, 5.5vw, 3.6rem);
+  font-weight: 900; line-height: 1.12; margin-bottom: 18px;
+}
+.nf-hero .nf-sub {
+  font-size: clamp(0.95rem, 2vw, 1.15rem);
+  color: #d8d4e8; max-width: 680px; margin: 0 auto 30px; line-height: 1.6;
+}
+
+/* ─── VSL PLACEHOLDER ─── */
+.vsl-frame {
+  max-width: 680px; margin: 0 auto 28px;
+  aspect-ratio: 16/9;
+  background: linear-gradient(160deg, #1c1830, #0f0d1c);
+  border: 1px solid rgba(233,30,140,0.3);
+  border-radius: 18px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 12px; position: relative; overflow: hidden;
+}
+.vsl-play-icon {
+  width: 68px; height: 68px; border-radius: 50%;
+  background: var(--gradient); display: flex; align-items: center; justify-content: center;
+  font-size: 26px; box-shadow: 0 8px 30px rgba(233,30,140,0.4);
+}
+.vsl-frame .vsl-note { font-size: 0.85rem; color: var(--text-muted); }
+.vsl-frame .vsl-sound { font-size: 0.78rem; color: #a09bb8; }
+
+/* ─── COUNTDOWN real (baseado em data, não fake) ─── */
+.countdown-box {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: rgba(233,30,140,0.1); border: 1px solid rgba(233,30,140,0.3);
+  padding: 10px 20px; border-radius: 50px; font-size: 0.85rem; color: #F48CBB; font-weight: 600;
+  margin-top: 18px;
+}
+.countdown-box strong { font-variant-numeric: tabular-nums; color: #fff; }
+
+/* ─── FILEIRAS ESTILO NETFLIX (scroll horizontal) ─── */
+.nf-row-section { padding: 56px 0; }
+.nf-row-header { max-width: 1100px; margin: 0 auto 20px; padding: 0 20px; }
+.nf-row-header h2 { font-size: clamp(1.3rem, 3vw, 1.8rem); }
+.nf-row-header p { color: var(--text-muted); font-size: 0.92rem; margin-top: 6px; }
+.nf-row-track {
+  display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x proximity;
+  padding: 4px 20px 20px; max-width: 1100px; margin: 0 auto;
+  scrollbar-width: thin; scrollbar-color: rgba(233,30,140,0.4) transparent;
+}
+.nf-row-track::-webkit-scrollbar { height: 6px; }
+.nf-row-track::-webkit-scrollbar-thumb { background: rgba(233,30,140,0.4); border-radius: 10px; }
+
+.nf-card {
+  flex: 0 0 auto; width: 260px; scroll-snap-align: start;
+  background: var(--dark3); border: 1px solid var(--border); border-radius: 16px;
+  padding: 24px 20px; transition: transform 0.2s, border-color 0.2s;
+}
+.nf-card:hover { transform: translateY(-4px) scale(1.02); border-color: rgba(233,30,140,0.35); }
+.nf-card .nf-card-icon { font-size: 1.8rem; margin-bottom: 12px; display: block; }
+.nf-card h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 8px; }
+.nf-card p { font-size: 0.82rem; color: var(--text-muted); line-height: 1.55; }
+.nf-card.nf-card-bad { border-color: rgba(248,113,113,0.25); }
+.nf-card.nf-card-bad .nf-card-icon { color: #f87171; }
+.nf-card.nf-card-bonus { border-color: rgba(233,30,140,0.3); background: rgba(233,30,140,0.05); }
+.nf-card a.nf-card-link { display: inline-block; margin-top: 12px; font-size: 0.8rem; color: #E91E8C; text-decoration: none; font-weight: 700; }
+.nf-card a.nf-card-link:hover { text-decoration: underline; }
+
+/* Reviews reais dentro de fileira Netflix */
+.nf-row-track .story-card { flex: 0 0 auto; width: 300px; scroll-snap-align: start; margin-bottom: 0; }
+
+@media (max-width: 640px) {
+  .nf-hero { padding: 110px 16px 40px; min-height: auto; }
+  .nf-card { width: 220px; }
+}
+
 /* ─── QUIZ (substitui o formulário estático) ─── */
 .quiz-progress-track {
   height: 6px;
