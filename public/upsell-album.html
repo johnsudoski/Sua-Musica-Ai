@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Upgrade Exclusivo: Álbum Completo — SuaMúsicaAI</title>
+<meta name="robots" content="noindex, nofollow" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  :root{--pink:#E91E8C;--purple:#7B2FBE;--dark:#0D0D1A;--dark2:#161628;--dark3:#1E1E35;--text:#F0EEF8;--muted:#A09BB8;--border:rgba(255,255,255,0.1);--gradient:linear-gradient(135deg,var(--pink),var(--purple));}
+  body{font-family:'Inter',sans-serif;background:var(--dark);color:var(--text);line-height:1.6;padding-bottom:40px;}
+  .container{max-width:680px;margin:0 auto;padding:0 20px;}
+  h1,h2,h3{line-height:1.25;}
+  .section{padding:36px 0;}
+  .center{text-align:center;}
+
+  /* progresso */
+  .progress-track{height:8px;background:var(--dark3);border-radius:50px;overflow:hidden;margin:20px auto 8px;max-width:680px;}
+  .progress-bar{height:100%;width:66%;background:var(--gradient);}
+  .progress-steps{display:flex;justify-content:center;gap:18px;font-size:12.5px;color:var(--muted);margin-bottom:8px;}
+  .progress-steps .done{color:#4ade80;}
+  .progress-steps .active{color:#f9a8d4;font-weight:700;}
+
+  /* urgencia */
+  .urgency h1{font-size:clamp(22px,5vw,30px);margin-bottom:10px;}
+  .urgency p{color:var(--muted);font-size:15px;}
+
+  /* vsl */
+  .vsl-frame{max-width:640px;margin:24px auto;aspect-ratio:16/9;background:linear-gradient(160deg,#1c1830,#0f0d1c);border:1px solid rgba(233,30,140,0.3);border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;overflow:hidden;}
+  .vsl-frame iframe{width:100%;height:100%;border:none;}
+  .vsl-play{width:60px;height:60px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-size:22px;}
+
+  /* countdown */
+  .countdown{display:inline-flex;align-items:center;gap:8px;background:rgba(233,30,140,0.1);border:1px solid rgba(233,30,140,0.3);padding:10px 20px;border-radius:50px;font-size:14px;color:#f9a8d4;font-weight:600;margin:16px 0;}
+  .countdown strong{color:#fff;font-variant-numeric:tabular-nums;}
+
+  /* cta duplo */
+  .cta-yes{display:block;width:100%;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;text-align:center;padding:20px;border-radius:50px;font-size:17px;font-weight:800;text-decoration:none;box-shadow:0 8px 30px rgba(34,197,94,0.35);margin:20px 0 10px;border:none;cursor:pointer;}
+  .cta-yes:hover{opacity:0.92;}
+  .cta-no{display:block;text-align:center;color:var(--muted);font-size:13px;text-decoration:underline;background:none;border:none;cursor:pointer;font-family:inherit;margin:0 auto;}
+
+  /* verdades */
+  .truth-card{background:var(--dark3);border-left:3px solid #fbbf24;border-radius:10px;padding:16px 18px;margin-bottom:12px;font-size:14.5px;color:#ddd;}
+  .truth-card b{color:#fbbf24;}
+
+  /* como funciona */
+  .step-card{background:var(--dark3);border-radius:14px;padding:20px 22px;margin-bottom:14px;}
+  .step-card h4{font-size:15px;margin-bottom:6px;color:#f9a8d4;}
+  .step-card p{font-size:14px;color:var(--muted);}
+
+  /* bonus */
+  .bonus-card{background:rgba(233,30,140,0.06);border:1px solid rgba(233,30,140,0.25);border-radius:14px;padding:20px 22px;margin-bottom:14px;}
+  .bonus-card h4{font-size:15px;margin-bottom:6px;}
+  .bonus-card p{font-size:13.5px;color:var(--muted);}
+
+  /* valor */
+  .value-list{list-style:none;margin:20px 0;}
+  .value-list li{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:14.5px;}
+  .value-list li b{color:#f9a8d4;}
+
+  /* preco */
+  .price-box{text-align:center;background:var(--dark3);border:1px solid rgba(233,30,140,0.3);border-radius:20px;padding:32px 20px;margin:20px 0;}
+  .price-final{font-size:44px;font-weight:900;color:var(--pink);}
+  .price-parcelas{font-size:14px;color:var(--muted);margin-top:6px;}
+
+  /* garantia */
+  .guarantee-box{background:var(--dark3);border:1px solid rgba(233,30,140,0.25);border-radius:16px;padding:24px;margin:20px 0;}
+  .guarantee-box h3{margin-bottom:12px;}
+  .guarantee-box ul{list-style:none;}
+  .guarantee-box li{padding:6px 0 6px 26px;position:relative;font-size:14px;color:#ddd;}
+  .guarantee-box li::before{content:'✅';position:absolute;left:0;}
+
+  /* reviews reais */
+  #upsellReviews{margin:20px 0;}
+  .story-card{background:var(--dark3);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:14px;}
+  .story-stars{color:#fbbf24;font-size:13px;margin-bottom:8px;}
+  .story-text{color:#ccc;font-size:14px;font-style:italic;}
+
+  footer{text-align:center;font-size:12px;color:var(--muted);padding:30px 0;}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- INDICADOR DE PROGRESSO -->
+  <div class="section" style="padding-bottom:0;">
+    <div class="progress-track"><div class="progress-bar"></div></div>
+    <div class="progress-steps">
+      <span class="done">✓ Música garantida</span>
+      <span class="active">● Upgrade exclusivo</span>
+      <span>○ Confirmação</span>
+    </div>
+  </div>
+
+  <!-- URGENCIA -->
+  <div class="section urgency center">
+    <h1>Espera! Não feche esta página ainda 🎵</h1>
+    <p>Sua música já está garantida — mas liberamos um upgrade exclusivo, disponível só nesta página.</p>
+  </div>
+
+  <!-- VSL -->
+  <div class="section" style="padding-top:0;">
+    <div class="vsl-frame" id="vslFrame">
+      <!-- SUBSTITUIR pelo embed do YouTube quando o vídeo estiver pronto, mesmo padrão da home:
+      <iframe src="https://www.youtube-nocookie.com/embed/SEU_VIDEO_ID?rel=0&modestbranding=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+      -->
+      <div class="vsl-play">▶</div>
+      <p style="color:var(--muted);font-size:13px;">Vídeo explicativo do upgrade — em breve aqui</p>
+    </div>
+  </div>
+
+  <!-- COUNTDOWN -->
+  <div class="section center" style="padding-top:0;">
+    <div class="countdown">⏰ Esta oferta desta semana expira em: <strong id="countdownText">--:--:--</strong></div>
+  </div>
+
+  <!-- CTA DUPLO -->
+  <div class="section" style="padding-top:0;">
+    <!-- SUBSTITUIR href="#" pelo link de checkout da Ticto quando estiver criado -->
+    <a href="#" id="ctaYes" class="cta-yes">✅ SIM! Quero o Álbum Completo + Vídeo Compilation</a>
+    <button type="button" class="cta-no" onclick="document.getElementById('naoObrigado').scrollIntoView({behavior:'smooth'})">Não, vou ficar só com 1 música por enquanto</button>
+  </div>
+
+  <!-- PARABENS + PROBLEMA -->
+  <div class="section">
+    <h2 style="margin-bottom:12px;">Parabéns pela sua decisão! 🎉</h2>
+    <p style="color:#ddd;margin-bottom:14px;">Você garantiu uma música personalizada que vai emocionar de um jeito que presente nenhum genérico alcança. Isso já te coloca à frente da maioria.</p>
+    <p style="color:#ddd;margin-bottom:14px;">Mas tem algo que vale a pena você saber antes de fechar esta página...</p>
+    <p style="color:#ddd;margin-bottom:14px;">Uma música incrível não fecha a história — ela abre o apetite pra reviver outros momentos da jornada de vocês. É comum quem cria uma música querer, depois, transformar outros capítulos da relação em música também.</p>
+    <p style="color:#ddd;">Se você fizer isso depois, separadamente, cada música extra sai por R$49,90. Pra completar um álbum de 5, seriam R$249,50 — sem os bônus, sem o vídeo compilation.</p>
+  </div>
+
+  <!-- VERDADES -->
+  <div class="section">
+    <h2 style="margin-bottom:16px;">O que vale saber antes de decidir</h2>
+    <div class="truth-card"><b>Relacionamentos são feitos de momentos múltiplos.</b> Uma música conta um capítulo. Um álbum conta a história inteira.</div>
+    <div class="truth-card"><b>Criar músicas separadamente significa repetir o processo várias vezes</b> — mais tempo, mais decisões. O upgrade cria tudo de uma vez, entregue em até 15 dias.</div>
+    <div class="truth-card"><b>O vídeo compilation transforma o álbum numa experiência</b>, não só num conjunto de arquivos separados — pensado pra ser assistido junto, não só ouvido.</div>
+  </div>
+
+  <!-- SOLUCAO -->
+  <div class="section">
+    <h2 style="margin-bottom:14px;">O Álbum Completo: 5 Músicas + Vídeo Compilation</h2>
+    <p style="color:#ddd;margin-bottom:14px;">Em vez de uma música, um álbum com 5 músicas, cada uma sobre um capítulo diferente da história de vocês:</p>
+    <ul style="list-style:none;margin-bottom:14px;">
+      <li style="padding:6px 0;color:#ddd;">🎵 Como vocês se conheceram</li>
+      <li style="padding:6px 0;color:#ddd;">🎵 O primeiro beijo / primeiro "eu te amo"</li>
+      <li style="padding:6px 0;color:#ddd;">🎵 O momento mais difícil que superaram juntos</li>
+      <li style="padding:6px 0;color:#ddd;">🎵 Por que você a(o) ama</li>
+      <li style="padding:6px 0;color:#ddd;">🎵 O futuro que vocês vão construir</li>
+    </ul>
+    <p style="color:#ddd;">Cada música num estilo diferente, e tudo compilado num vídeo de até 15 minutos com letras animadas e transições — pensado pra ser assistido junto, como uma pequena experiência sobre a história de vocês.</p>
+  </div>
+
+  <!-- COMO FUNCIONA -->
+  <div class="section">
+    <h2 style="margin-bottom:16px;">Como funciona</h2>
+    <div class="step-card"><h4>1. Da música única ao álbum</h4><p>Reaproveitamos as informações que você já deu sobre a relação de vocês pra criar as 4 músicas adicionais — você não preenche tudo de novo.</p></div>
+    <div class="step-card"><h4>2. Um estilo diferente pra cada momento</h4><p>Cada música ganha um estilo musical que combina com a emoção daquele capítulo específico.</p></div>
+    <div class="step-card"><h4>3. Vídeo compilation</h4><p>As 5 músicas compiladas num vídeo com letras animadas e transições — pronto pra assistirem juntos.</p></div>
+  </div>
+
+  <!-- BONUS -->
+  <div class="section">
+    <h2 style="margin-bottom:16px;">Bônus inclusos no upgrade</h2>
+    <div class="bonus-card"><h4>🎁 Capa de Álbum Profissional Personalizada</h4><p>Design de capa gerado com a estética do seu álbum, pronto pra imprimir ou usar como capa digital.</p></div>
+    <div class="bonus-card"><h4>🎁 Linha do Tempo Visual do Relacionamento</h4><p>Infográfico ilustrado com a linha do tempo de vocês, pronto pra imprimir ou compartilhar.</p></div>
+    <div class="bonus-card"><h4>🎁 Behind The Scenes</h4><p>Documento explicando a inspiração e as escolhas por trás de cada uma das 5 músicas.</p></div>
+  </div>
+
+  <!-- VALOR -->
+  <div class="section">
+    <h2 style="margin-bottom:8px;">O que você recebe</h2>
+    <ul class="value-list">
+      <li><span>Álbum — 5 músicas personalizadas</span><b>incluso</b></li>
+      <li><span>Vídeo compilation (até 15 min)</span><b>incluso</b></li>
+      <li><span>Capa de álbum personalizada</span><b>bônus</b></li>
+      <li><span>Linha do tempo visual</span><b>bônus</b></li>
+      <li><span>Behind the scenes</span><b>bônus</b></li>
+    </ul>
+  </div>
+
+  <!-- PRECO -->
+  <div class="section">
+    <div class="price-box">
+      <div class="price-final">R$149,90</div>
+      <div class="price-parcelas">ou 12x de R$14,52 no cartão</div>
+      <p style="font-size:13px;color:var(--muted);margin-top:10px;">💳 Mesmos dados do cartão já usado · 🔒 Compra segura · ⚡ Ativação imediata no seu pedido</p>
+    </div>
+  </div>
+
+  <!-- GARANTIA -->
+  <div class="section">
+    <div class="guarantee-box">
+      <h3>🛡️ Garantia dupla</h3>
+      <ul>
+        <li>Sua primeira música continua com a garantia original de sempre</li>
+        <li>Se qualquer uma das 5 músicas do álbum não ficar boa, refazemos até você aprovar</li>
+        <li>Se ainda assim não ficar satisfeito, devolvemos 100% do valor do upgrade em até 7 dias</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- PROVA SOCIAL REAL (dinâmica, some se não houver volume) -->
+  <div class="section" id="upsellReviewsSection" style="display:none;">
+    <h2 style="margin-bottom:16px;">O que dizem quem já fez o upgrade</h2>
+    <div id="upsellReviews"></div>
+  </div>
+
+  <!-- CTA FINAL -->
+  <div class="section center">
+    <h2 style="margin-bottom:14px;">Última chamada</h2>
+    <p style="color:var(--muted);margin-bottom:20px;">Esta página de upgrade só aparece uma vez, agora, logo após sua compra.</p>
+    <!-- SUBSTITUIR href="#" pelo link de checkout da Ticto -->
+    <a href="#" class="cta-yes" style="max-width:520px;margin-left:auto;margin-right:auto;">✅ QUERO O ÁLBUM COMPLETO + BÔNUS POR R$149,90</a>
+    <p id="naoObrigado" style="margin-top:16px;">
+      <button type="button" class="cta-no" onclick="window.location.href='/obrigado.html'">Não, obrigado — seguir só com a minha música</button>
+    </p>
+  </div>
+
+</div>
+
+<footer>SuaMúsicaAI • Compra 100% segura · Garantia de 7 dias</footer>
+
+<script>
+// Countdown real -- mesmo mecanismo da home (expira toda semana, domingo 23:59:59)
+function nextSundayMidnight() {
+  var now = new Date();
+  var day = now.getDay();
+  var daysUntilSunday = (7 - day) % 7;
+  var target = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysUntilSunday, 23, 59, 59);
+  if (target <= now) target.setDate(target.getDate() + 7);
+  return target;
+}
+function formatCountdown(ms) {
+  if (ms <= 0) return '00:00:00';
+  var totalSec = Math.floor(ms / 1000);
+  var h = Math.floor(totalSec / 3600), m = Math.floor((totalSec % 3600) / 60), s = totalSec % 60;
+  function pad(n) { return String(n).padStart(2, '0'); }
+  return pad(h) + ':' + pad(m) + ':' + pad(s);
+}
+function tick() {
+  var el = document.getElementById('countdownText');
+  if (el) el.textContent = formatCountdown(nextSundayMidnight() - new Date());
+}
+tick(); setInterval(tick, 1000);
+
+// Reviews reais (mesma fonte da home) -- some se não houver volume ainda
+var API_BASE = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'http://localhost:3000' : '';
+fetch(API_BASE + '/api/reviews/approved?limit=4')
+  .then(function(r){return r.json();})
+  .then(function(data){
+    var reviews = (data && data.reviews) || [];
+    if (reviews.length < 3) return;
+    var section = document.getElementById('upsellReviewsSection');
+    var grid = document.getElementById('upsellReviews');
+    reviews.forEach(function(r){
+      var stars = '★★★★★☆☆☆☆☆'.slice(5 - r.rating, 10 - r.rating);
+      var card = document.createElement('div');
+      card.className = 'story-card';
+      var starsEl = document.createElement('div'); starsEl.className='story-stars'; starsEl.textContent = stars;
+      var textEl = document.createElement('p'); textEl.className='story-text'; textEl.textContent = '"' + r.texto + '"';
+      card.appendChild(starsEl); card.appendChild(textEl);
+      grid.appendChild(card);
+    });
+    section.style.display = 'block';
+  }).catch(function(){});
+</script>
+</body>
+</html>

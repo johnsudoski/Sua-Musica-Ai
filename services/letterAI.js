@@ -62,4 +62,87 @@ Regras:
   return text.trim();
 }
 
-module.exports = { generateLoveLetter };
+// Temas do Kit "Datas Especiais" -- 12 cartas, uma por ocasião (não por mês
+// fixo, já que a compra pode acontecer em qualquer época do ano).
+const KIT_TEMAS = [
+  'Aniversário de namoro',
+  'Dia dos Namorados',
+  'Aniversário dela(e)',
+  'Pedido de desculpas depois de uma briga',
+  'Carta "só porque eu te amo", sem motivo nenhum',
+  'Agradecimento por tudo que ela(e) faz',
+  'Saudade, para quando estiverem separados por um tempo',
+  'Natal / Ano Novo',
+  'Reconciliação, para depois de um desentendimento',
+  'Véspera de um momento importante (mudança, decisão, viagem)',
+  'Celebrando uma conquista dela(e)',
+  'Carta sobre o futuro que vocês vão construir juntos',
+];
+
+/**
+ * Gera as 12 cartas do Kit "Datas Especiais" numa única chamada -- mais
+ * barato e mais rápido que 12 chamadas separadas, e garante que a IA varie
+ * o tom entre elas em vez de repetir a mesma carta com trocas pequenas.
+ * Retorna [{ tema, texto }, ...] na mesma ordem de KIT_TEMAS.
+ */
+async function generateLoveLetterSet({ nomeDestinatario, relacao, memoria }) {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    throw new Error('ANTHROPIC_API_KEY não configurada -- geração de carta indisponível');
+  }
+
+  const relacaoTexto = RELACAO_TEXTO[relacao] || relacao || 'pessoa especial';
+  const temasNumerados = KIT_TEMAS.map((t, i) => `${i + 1}. ${t}`).join('\n');
+
+  const prompt = `Escreva um KIT de 12 cartas de amor curtas em português do Brasil, para ${nomeDestinatario}, que é ${relacaoTexto} de quem está escrevendo. Cada carta é para uma ocasião diferente, nesta ordem exata:
+${temasNumerados}
+
+Use esta memória especial contada por quem está escrevendo como base real (incorpore os detalhes dela nas cartas onde fizer sentido -- especialmente nas de aniversário de namoro e "sobre o futuro"; não invente outros fatos além do que está aqui):
+"${memoria}"
+
+Regras:
+- Cada carta deve ter tom e foco DIFERENTES entre si, correspondendo à ocasião listada -- não repita a mesma estrutura ou frases entre elas
+- Direcione cada carta diretamente para ${nomeDestinatario} (2ª pessoa, "você")
+- Tom emocional, sincero, não piegas nem genérico -- deve soar como uma pessoa real escrevendo
+- Não invente nomes, datas ou fatos que não estejam na memória fornecida
+- Cada carta entre 60 e 110 palavras (mais curtas que uma carta única, já que são 12)
+- Sem assinatura em nenhuma (quem recebe já sabe quem enviou)
+- Não use markdown
+
+Responda em formato JSON puro, um array de 12 objetos, cada um com "tema" (copie o texto exato do tema da lista acima) e "texto" (a carta). Não escreva nada antes ou depois do JSON.`;
+
+  const res = await axios.post(
+    'https://api.anthropic.com/v1/messages',
+    {
+      model: 'claude-sonnet-4-5-20250929',
+      max_tokens: 3000,
+      messages: [{ role: 'user', content: prompt }],
+    },
+    {
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      timeout: 60000,
+    }
+  );
+
+  const text = res.data?.content?.[0]?.text;
+  if (!text) throw new Error('Resposta da IA sem texto (kit de cartas)');
+
+  // A IA às vezes envolve o JSON em ```json ... ``` apesar da instrução -- limpa antes de parsear.
+  const cleaned = text.trim().replace(/^```json\s*/i, '').replace(/```$/, '').trim();
+  let letters;
+  try {
+    letters = JSON.parse(cleaned);
+  } catch (err) {
+    throw new Error(`Falha ao parsear JSON do kit de cartas: ${err.message}`);
+  }
+  if (!Array.isArray(letters) || letters.length === 0) {
+    throw new Error('Kit de cartas: resposta da IA não é um array válido');
+  }
+  return letters;
+}
+
+module.exports = { generateLoveLetter, generateLoveLetterSet };

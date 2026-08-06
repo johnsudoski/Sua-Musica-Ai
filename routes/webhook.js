@@ -8,7 +8,8 @@ const express = require('express');
 const crypto = require('crypto');
 const axios = require('axios');
 const db = require('../services/db');
-const { generateFull } = require('../services/suno');
+const { generateFull, generateInstrumental } = require('../services/suno');
+const { generateLoveLetterSet } = require('../services/letterAI');
 const emailService = require('../services/email');
 const { sendPurchaseEvent } = require('../services/metaCapi');
 
@@ -20,6 +21,10 @@ const PRODUCT_IDS = {
   video: process.env.TICTO_VIDEO_PRODUCT || 'OD8AA1433',
   pack3: process.env.TICTO_PACK3_PRODUCT || 'O2B7D2FC2',
   carta: process.env.TICTO_CARTA_PRODUCT || '', // ainda não existe -- criar produto na Ticto e setar essa env var
+  // Order bumps (comprados junto com mp3/video/pack3 no mesmo checkout)
+  bump_instrumental: process.env.TICTO_BUMP_INSTRUMENTAL_PRODUCT || 'O56FD8D3A',
+  bump_cartas:        process.env.TICTO_BUMP_CARTAS_PRODUCT        || 'OD7EA6425',
+  bump_playlist:       process.env.TICTO_BUMP_PLAYLIST_PRODUCT      || 'O4E87373F',
 };
 
 // ─── Valores dos produtos (pra reportar ao Meta via Conversions API) ───
@@ -28,6 +33,9 @@ const PRODUCT_VALUES = {
   video: 39.90,
   pack3: 39.90,
   carta: Number(process.env.CARTA_PRICE || 14.90),
+  bump_instrumental: 14.90,
+  bump_cartas:        19.90,
+  bump_playlist:       7.90,
 };
 
 // ─── Detecta qual produto foi comprado pelo payload Ticto ───
@@ -35,6 +43,9 @@ function detectProductType(payload) {
   const offerId = payload?.sale?.offer_id || payload?.order?.offer_id || payload?.offer_id || '';
 
   if (PRODUCT_IDS.carta && offerId === PRODUCT_IDS.carta) return 'carta';
+  if (offerId === PRODUCT_IDS.bump_instrumental) return 'bump_instrumental';
+  if (offerId === PRODUCT_IDS.bump_cartas)        return 'bump_cartas';
+  if (offerId === PRODUCT_IDS.bump_playlist)       return 'bump_playlist';
   if (offerId === PRODUCT_IDS.pack3) return 'pack3';
   if (offerId === PRODUCT_IDS.video) return 'video';
   if (offerId === PRODUCT_IDS.mp3)   return 'mp3';
@@ -44,7 +55,9 @@ function detectProductType(payload) {
   // distingue entre eles. Esse fallback só é confiável pro mp3 (R$19,90);
   // pra video/pack3 dependemos do offer_id bater corretamente.
   const price = Number(payload?.sale?.price || payload?.order?.price || payload?.price || 0);
-  if (price > 0 && price < 1500) return 'carta'; // carta é o produto mais barato -- ajustar se CARTA_PRICE mudar
+  if (price > 0 && price < 1000) return 'bump_playlist'; // R$7,90
+  if (price >= 1000 && price < 1700) return 'bump_instrumental'; // R$14,90
+  if (price >= 1700 && price < 2500) return 'bump_cartas'; // R$19,90 (ambíguo com carta se CARTA_PRICE for igual)
   if (price >= 3500) return 'pack3'; // R$35+ (ambíguo com video, ver nota acima)
   if (price >= 2500) return 'video'; // R$25-34 (só cai aqui se price < 35, não deveria acontecer pro video real)
   return 'mp3';
@@ -195,6 +208,12 @@ router.post('/ticto', async (req, res) => {
     } else if (productType === 'carta') {
       // campaignId aqui carrega o letterId (setado como utm_campaign no link de checkout da carta.html)
       await handleCartaPurchase(campaignId, email);
+    } else if (productType === 'bump_instrumental') {
+      await handleBumpInstrumental(campaignId, email);
+    } else if (productType === 'bump_cartas') {
+      await handleBumpCartas(campaignId, email);
+    } else if (productType === 'bump_playlist') {
+      await handleBumpPlaylist(campaignId, email);
     } else if (campaignId) {
       triggerFullGeneration(campaignId, email, productType);
     } else if (email) {
@@ -211,6 +230,70 @@ router.post('/ticto', async (req, res) => {
     console.error('Ticto webhook: erro ao processar pagamento:', err.message);
   }
 });
+
+// ─── Order Bump: Áudio-Mensagem Personalizada (versão instrumental) ───
+async function handleBumpInstrumental(orderId, email) {
+  if (!orderId) { console.warn('Bump Instrumental: sem orderId (utm_campaign) — não é possível localizar a música'); return; }
+  const row = await db.getOrder(orderId).catch(() => null);
+  if (!row?.form_data) { console.warn(`Bump Instrumental: pedido ${orderId} não encontrado`); return; }
+
+  const emailTo = (email || row.email || '').toLowerCase().trim();
+  if (!emailTo) { console.warn(`Bump Instrumental: sem email para orderId ${orderId}`); return; }
+
+  try {
+    const { audioUrl } = await generateInstrumental(row.form_data);
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
+    global.downloadTokens.set(token, { orderId: `${orderId}-instrumental`, audioUrl, expiresAt });
+
+    await emailService.sendBumpInstrumentalEmail({
+      to: emailTo,
+      nomeDestinatario: row.form_data.nomeDestinatario,
+      downloadUrl: `${process.env.APP_URL}/api/download/${token}`,
+    });
+    console.log(`Bump Instrumental: entregue para ${emailTo} (orderId ${orderId})`);
+  } catch (err) {
+    console.error(`Bump Instrumental: falha ao gerar/entregar para orderId ${orderId}:`, err.message);
+  }
+}
+
+// ─── Order Bump: Kit 12 Cartas de Amor (uma por mês/ocasião) ───
+async function handleBumpCartas(orderId, email) {
+  if (!orderId) { console.warn('Bump Cartas: sem orderId (utm_campaign) — não é possível localizar a história'); return; }
+  const row = await db.getOrder(orderId).catch(() => null);
+  if (!row?.form_data) { console.warn(`Bump Cartas: pedido ${orderId} não encontrado`); return; }
+
+  const emailTo = (email || row.email || '').toLowerCase().trim();
+  if (!emailTo) { console.warn(`Bump Cartas: sem email para orderId ${orderId}`); return; }
+
+  try {
+    const letters = await generateLoveLetterSet({
+      nomeDestinatario: row.form_data.nomeDestinatario,
+      relacao: row.form_data.relacao,
+      memoria: row.form_data.memoria,
+    });
+    await emailService.sendBumpCartasEmail({ to: emailTo, nomeDestinatario: row.form_data.nomeDestinatario, letters });
+    console.log(`Bump Cartas: entregue para ${emailTo} (orderId ${orderId})`);
+  } catch (err) {
+    console.error(`Bump Cartas: falha ao gerar/entregar para orderId ${orderId}:`, err.message);
+  }
+}
+
+// ─── Order Bump: Playlist Romântica Curada (curadoria fixa por gênero, sem geração dinâmica) ───
+async function handleBumpPlaylist(orderId, email) {
+  if (!orderId) { console.warn('Bump Playlist: sem orderId (utm_campaign)'); return; }
+  const row = await db.getOrder(orderId).catch(() => null);
+  const emailTo = (email || row?.email || '').toLowerCase().trim();
+  if (!emailTo) { console.warn(`Bump Playlist: sem email para orderId ${orderId}`); return; }
+
+  const genero = row?.form_data?.genero || 'romantico';
+  try {
+    await emailService.sendBumpPlaylistEmail({ to: emailTo, genero });
+    console.log(`Bump Playlist: entregue para ${emailTo} (orderId ${orderId}, gênero ${genero})`);
+  } catch (err) {
+    console.error(`Bump Playlist: falha ao entregar para orderId ${orderId}:`, err.message);
+  }
+}
 
 // ─── Carta de Amor: desbloqueia o texto completo (já foi gerado no preview) ───
 async function handleCartaPurchase(letterId, email) {

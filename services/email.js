@@ -502,4 +502,107 @@ async function sendAbandonedPreviewEmail({ to, nomeDestinatario, orderId }) {
   return dispatchEmail({ to, subject, html, text, logLabel: 'recuperação de preview' });
 }
 
-module.exports = { sendDownloadEmail, sendPack3Email, sendVideoEmail, sendCreditsEmail, sendAbandonedPreviewEmail };
+// ── Template genérico de bônus (usado pelos 3 order bumps) ──
+function buildSimpleBonusHtml({ title, introHtml, bodyHtml, appUrl }) {
+  return `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${title}</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0D0D1A; color: #fff; margin: 0; padding: 20px; }
+    .container { max-width: 580px; margin: 0 auto; background: #161628; border-radius: 16px; overflow: hidden; }
+    .header { background: linear-gradient(135deg, #E91E8C, #7B2FBE); padding: 36px 30px; text-align: center; }
+    .header h1 { margin: 0; font-size: 24px; color: #fff; }
+    .body { padding: 32px 30px; }
+    .body p { color: #ccc; line-height: 1.6; margin: 0 0 16px; }
+    .btn { display: block; background: linear-gradient(135deg, #E91E8C, #7B2FBE); color: #fff !important; text-decoration: none; text-align: center; padding: 16px 32px; border-radius: 50px; font-size: 17px; font-weight: bold; margin: 20px 0; }
+    .track { background: #1c1830; border-radius: 10px; padding: 12px 16px; margin-bottom: 8px; font-size: 14px; }
+    .track b { color: #f9a8d4; }
+    .letter-card { background: #1c1830; border-left: 3px solid #E91E8C; border-radius: 10px; padding: 16px 18px; margin-bottom: 14px; }
+    .letter-tema { color: #f9a8d4; font-weight: bold; font-size: 13px; margin-bottom: 6px; }
+    .letter-texto { color: #ddd; font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
+    .footer { padding: 24px 30px; border-top: 1px solid #2a2a45; text-align: center; }
+    .footer p { color: #555; font-size: 13px; margin: 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header"><h1>${title}</h1></div>
+    <div class="body">
+      ${introHtml}
+      ${bodyHtml}
+      <p style="margin-top:24px;">Com carinho,<br><strong>Equipe SuaMúsicaAI</strong></p>
+    </div>
+    <div class="footer">
+      <p>SuaMúsicaAI • O presente mais emocionante do Brasil 🇧🇷</p>
+      <p style="margin-top:8px;"><a href="${appUrl}" style="color:#E91E8C;">Criar outra música</a></p>
+      <p style="margin-top:8px;">Dúvidas? <a href="mailto:suportesuamusicaai@gmail.com" style="color:#888;">suportesuamusicaai@gmail.com</a></p>
+    </div>
+  </div>
+</body>
+</html>`.trim();
+}
+
+/**
+ * Order Bump 1: Áudio-Mensagem Personalizada -- entrega a versão instrumental.
+ */
+async function sendBumpInstrumentalEmail({ to, nomeDestinatario, downloadUrl }) {
+  const appUrl = process.env.APP_URL || 'https://suamusicaai.com.br';
+  const subject = `🎤 Sua versão instrumental para gravar por cima está pronta`;
+  const introHtml = `<p>Olá! 💕</p><p>Aqui está a versão <strong>instrumental</strong> (sem voz) da música de <strong>${nomeDestinatario}</strong> -- pronta pra você gravar sua própria voz por cima.</p>`;
+  const bodyHtml = `
+    <a href="${downloadUrl}" class="btn">⬇️ Baixar instrumental agora</a>
+    <p style="font-size:13px;color:#888;">⏰ O link expira em 48 horas -- baixe e salve o arquivo assim que puder.</p>
+    <p><strong>Como gravar sua mensagem:</strong></p>
+    <p>1. Toque o instrumental no celular ou computador<br>
+    2. Grave sua voz falando por cima (qualquer app de gravação de tela ou um app de mixagem simples resolve)<br>
+    3. Fale com naturalidade -- não precisa decorar nada, pode ler</p>
+    <p style="font-size:13px;color:#f9a8d4;">💡 Dica: grave num lugar silencioso e fale mais perto do microfone do que parece necessário -- o instrumental já preenche o resto.</p>`;
+  const html = buildSimpleBonusHtml({ title: '🎤 Sua versão instrumental está pronta', introHtml, bodyHtml, appUrl });
+  const text = `Sua versão instrumental (sem voz) da música de ${nomeDestinatario} está pronta.\n\nBaixar: ${downloadUrl}\n\n⏰ Link expira em 48h.\n\nEquipe SuaMúsicaAI`;
+  return dispatchEmail({ to, subject, html, text, logLabel: 'bump instrumental' });
+}
+
+/**
+ * Order Bump 2: Kit "Datas Especiais" -- entrega as 12 cartas geradas.
+ */
+async function sendBumpCartasEmail({ to, nomeDestinatario, letters }) {
+  const appUrl = process.env.APP_URL || 'https://suamusicaai.com.br';
+  const subject = `💌 Seu Kit de 12 Cartas para ${nomeDestinatario} está pronto`;
+  const introHtml = `<p>Olá! 💕</p><p>Aqui está seu <strong>Kit de 12 Cartas</strong> -- uma para cada ocasião especial com <strong>${nomeDestinatario}</strong>. É só copiar, adaptar se quiser, e usar na hora certa.</p>`;
+  const cardsHtml = (letters || []).map(l => `
+    <div class="letter-card">
+      <div class="letter-tema">💌 ${l.tema}</div>
+      <div class="letter-texto">${(l.texto || '').replace(/</g, '&lt;')}</div>
+    </div>`).join('');
+  const bodyHtml = `${cardsHtml}<p style="font-size:13px;color:#888;margin-top:16px;">Salve este email -- ele é sua referência para o ano inteiro.</p>`;
+  const html = buildSimpleBonusHtml({ title: '💌 Seu Kit de 12 Cartas', introHtml, bodyHtml, appUrl });
+  const textCards = (letters || []).map(l => `--- ${l.tema} ---\n${l.texto}\n`).join('\n');
+  const text = `Seu Kit de 12 Cartas para ${nomeDestinatario}:\n\n${textCards}\n\nEquipe SuaMúsicaAI`;
+  return dispatchEmail({ to, subject, html, text, logLabel: 'bump 12 cartas' });
+}
+
+/**
+ * Order Bump 3: Playlist Romântica Curada -- entrega a curadoria fixa do gênero.
+ */
+async function sendBumpPlaylistEmail({ to, genero }) {
+  const appUrl = process.env.APP_URL || 'https://suamusicaai.com.br';
+  const { getPlaylist } = require('./playlistData');
+  const tracks = getPlaylist(genero);
+  const subject = `🎵 Sua playlist romântica curada está pronta`;
+  const introHtml = `<p>Olá! 💕</p><p>Curadoria pensada pro estilo que você escolheu -- coloca no carro, no jantar, antes de dormir.</p>`;
+  const tracksHtml = tracks.map(t => `<div class="track"><b>${t.titulo}</b> — ${t.artista}</div>`).join('');
+  const searchUrl = 'https://open.spotify.com/search/' + encodeURIComponent(tracks.map(t => t.titulo).join(' ') + ' romantico');
+  const bodyHtml = `
+    ${tracksHtml}
+    <a href="${searchUrl}" class="btn" target="_blank">🔎 Buscar essas músicas no Spotify</a>
+    <p style="font-size:13px;color:#888;">Essas são uma seleção curada pra começar -- monte sua playlist no Spotify/YouTube Music salvando as que mais combinarem com vocês.</p>`;
+  const html = buildSimpleBonusHtml({ title: '🎵 Sua playlist romântica', introHtml, bodyHtml, appUrl });
+  const text = `Sua playlist curada:\n\n${tracks.map(t => `${t.titulo} — ${t.artista}`).join('\n')}\n\nBuscar no Spotify: ${searchUrl}\n\nEquipe SuaMúsicaAI`;
+  return dispatchEmail({ to, subject, html, text, logLabel: 'bump playlist' });
+}
+
+module.exports = { sendDownloadEmail, sendPack3Email, sendVideoEmail, sendCreditsEmail, sendAbandonedPreviewEmail, sendBumpInstrumentalEmail, sendBumpCartasEmail, sendBumpPlaylistEmail };

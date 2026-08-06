@@ -105,6 +105,27 @@ async function startGeneration(formData) {
 }
 
 /**
+ * Inicia geração da versão INSTRUMENTAL (sem voz) da mesma música --
+ * usado no Order Bump "Áudio-Mensagem Personalizada". Mesmo prompt/estilo,
+ * só troca sunoParams.instrumental para true.
+ */
+async function startInstrumentalGeneration(formData) {
+  if (!process.env.APIFRAME_API_KEY) {
+    throw new Error('APIFRAME_API_KEY não configurada');
+  }
+  const prompt = buildPrompt(formData);
+  const initRes = await withRetry(() => axios.post(
+    `${BASE}/music/generate`,
+    { model: 'suno', prompt, sunoParams: { custom_mode: false, instrumental: true, model_version: 'V5_5' } },
+    { headers: headers(), timeout: 15000 }
+  ));
+  const { jobId } = initRes.data;
+  if (!jobId) throw new Error('apiframe.ai não retornou jobId (instrumental)');
+  console.log(`[suno] Job instrumental iniciado: ${jobId}`);
+  return jobId;
+}
+
+/**
  * Verifica status de um job — UMA chamada só, sem bloquear.
  * Retorna: { status: 'COMPLETED'|'PROCESSING'|'FAILED', audioUrl?, error? }
  */
@@ -132,9 +153,10 @@ async function checkJobStatus(jobId) {
 
 /**
  * Geração bloqueante com polling — usada apenas em generate-full (pós-compra, background)
+ * startFn permite reusar o mesmo polling para a versão instrumental (Order Bump).
  */
-async function generateMusic(formData, maxSeconds = 360) {
-  const jobId = await startGeneration(formData);
+async function generateMusic(formData, maxSeconds = 360, startFn = startGeneration) {
+  const jobId = await startFn(formData);
   const start = Date.now();
   let delay = 8000;
 
@@ -165,4 +187,11 @@ async function generateFull(formData) {
   return generateMusic(formData, 360);
 }
 
-module.exports = { generatePreview, generateFull, startGeneration, checkJobStatus };
+/**
+ * Gera a versão instrumental (sem voz) da mesma música -- Order Bump.
+ */
+async function generateInstrumental(formData) {
+  return generateMusic(formData, 360, startInstrumentalGeneration);
+}
+
+module.exports = { generatePreview, generateFull, generateInstrumental, startGeneration, checkJobStatus };
