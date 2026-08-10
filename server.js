@@ -68,8 +68,16 @@ app.get('/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().
 // alcançável daqui, não do CLI local). Remover depois de resolvido.
 app.get('/api/debug/db-test', async (req, res) => {
   const { Client } = require('pg');
+  const net = require('net');
   const info = {
     databaseUrlHost: (process.env.DATABASE_URL || '').replace(/:[^:@]+@/, ':***@'),
+    rawTcp: await new Promise((resolve) => {
+      const start = Date.now();
+      const sock = net.connect({ host: 'postgres.railway.internal', port: 5432, timeout: 5000 });
+      sock.on('connect', () => { resolve({ ok: true, ms: Date.now() - start }); sock.destroy(); });
+      sock.on('timeout', () => { resolve({ ok: false, ms: Date.now() - start, err: 'timeout' }); sock.destroy(); });
+      sock.on('error', (e) => { resolve({ ok: false, ms: Date.now() - start, err: e.message }); });
+    }),
     attempts: [],
   };
   const variants = [
@@ -104,6 +112,8 @@ app.get('/api/debug/db-test', async (req, res) => {
         syscall: err.syscall,
         address: err.address,
         port: err.port,
+        cause: err.cause ? { message: err.cause.message, code: err.cause.code, library: err.cause.library, reason: err.cause.reason } : undefined,
+        stackTop: (err.stack || '').split('\n').slice(0, 3).join(' | '),
       });
       try { await client.end(); } catch (_) {}
     }
