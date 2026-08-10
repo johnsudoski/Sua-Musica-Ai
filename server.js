@@ -137,9 +137,31 @@ app.use((err, req, res, _next) => {
 });
 
 // ─── Start ───
-db.initSchema()
-  .then(() => console.log('   Postgres: ✓ schema pronto'))
-  .catch(err => console.error('   Postgres: ✗ erro ao iniciar schema:', err.message));
+// initSchema() pode falhar no cold-start do container: a rede interna do
+// Railway às vezes ainda não resolveu o host do Postgres no exato momento
+// em que o pool abre a primeira conexão ("Connection terminated
+// unexpectedly"). Sem retry, uma única falha transitória deixava o schema
+// (ex.: tabela vip_access) permanentemente desatualizado até o próximo
+// deploy. Retry com backoff cobre esse race condition sem mascarar erro
+// real de configuração (DATABASE_URL ausente/errada continua falhando
+// todas as tentativas e loga claramente no final).
+async function initSchemaWithRetry(maxAttempts = 5, delayMs = 3000) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      await db.initSchema();
+      console.log('   Postgres: ✓ schema pronto' + (attempt > 1 ? ` (tentativa ${attempt})` : ''));
+      return;
+    } catch (err) {
+      if (attempt === maxAttempts) {
+        console.error(`   Postgres: ✗ erro ao iniciar schema após ${maxAttempts} tentativas:`, err.message);
+        return;
+      }
+      console.warn(`   Postgres: tentativa ${attempt}/${maxAttempts} falhou (${err.message}), tentando de novo em ${delayMs}ms...`);
+      await new Promise(r => setTimeout(r, delayMs));
+    }
+  }
+}
+initSchemaWithRetry();
 
 app.listen(PORT, () => {
   console.log(`\n🎵 SuaMúsicaAI rodando em http://localhost:${PORT}`);
