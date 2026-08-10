@@ -73,14 +73,18 @@ app.get('/api/debug/db-test', async (req, res) => {
     attempts: [],
   };
   const variants = [
-    { label: 'ssl:false', ssl: false },
-    { label: 'ssl:{rejectUnauthorized:false}', ssl: { rejectUnauthorized: false } },
-    { label: 'ssl:undefined(default)', ssl: undefined },
+    { label: 'internal ssl:false', url: process.env.DATABASE_URL, ssl: false },
+    { label: 'internal ssl:{rejectUnauthorized:false}', url: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } },
+    { label: 'public ssl:{rejectUnauthorized:false}', url: process.env.DATABASE_PUBLIC_URL, ssl: { rejectUnauthorized: false } },
   ];
   for (const variant of variants) {
+    if (!variant.url) {
+      info.attempts.push({ variant: variant.label, ok: false, message: 'URL nao configurada (var ausente)' });
+      continue;
+    }
     const start = Date.now();
     const client = new Client({
-      connectionString: process.env.DATABASE_URL,
+      connectionString: variant.url,
       ssl: variant.ssl,
       connectionTimeoutMillis: 8000,
     });
