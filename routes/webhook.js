@@ -48,8 +48,8 @@ const PRODUCT_VALUES = {
   bump_instrumental: 14.90,
   bump_cartas:        19.90,
   bump_playlist:       7.90,
-  upsell_album: 149.90,
-  upsell_vip:    497.00,
+  upsell_album: 49.90,
+  upsell_vip:    69.90,
 };
 
 // ─── Detecta qual produto foi comprado pelo payload Ticto ───

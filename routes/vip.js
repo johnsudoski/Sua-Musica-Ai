@@ -41,6 +41,17 @@ router.post('/generate', async (req, res) => {
     return res.status(402).json({ error: 'Este email não tem acesso VIP ativo.' });
   }
 
+  // Uso justo -- não anunciado na página. Protege contra o outlier que
+  // geraria centenas de músicas só porque "é ilimitado". Mensagem genérica
+  // de propósito: não expõe o número nem soa como "limite anual" técnico.
+  const FAIR_USE_LIMIT = 30;
+  const usedThisYear = await db.countVipUsageThisYear(normalizedEmail).catch(() => 0);
+  if (usedThisYear >= FAIR_USE_LIMIT) {
+    return res.status(429).json({
+      error: 'Você já criou bastante coisa por aqui! Em breve vamos avisar por email sobre como continuar criando -- fique de olho na caixa de entrada.',
+    });
+  }
+
   const orderId = crypto.randomUUID();
   const formData = { nomeDestinatario, relacao, memoria, genero, voz };
 

@@ -161,6 +161,21 @@ async function checkVipStatus(email) {
   return { isVip, vipUntil: row.vip_until };
 }
 
+// Uso justo do VIP: conta quantas músicas essa pessoa já gerou pelo painel
+// VIP (source='vip') nos últimos 365 dias corridos. Não é anunciado na
+// página -- é só uma trava interna contra o cliente outlier que geraria
+// centenas de músicas só porque "é ilimitado".
+async function countVipUsageThisYear(email) {
+  const normalized = (email || '').toLowerCase().trim();
+  if (!normalized) return 0;
+  const result = await pool.query(
+    `SELECT count(*)::int AS n FROM orders
+     WHERE email = $1 AND source = 'vip' AND created_at >= now() - interval '365 days'`,
+    [normalized]
+  );
+  return result.rows[0]?.n || 0;
+}
+
 // ─── Pedidos de Vídeo Homenagem ───
 
 async function createVideoRequest({ requestId, email, formData, brief, uploadedFiles }) {
@@ -487,6 +502,7 @@ module.exports = {
   getAbandonedPreviews,
   grantVipAccess,
   checkVipStatus,
+  countVipUsageThisYear,
   markRecoveryEmailSent,
   orderRowToMemoryFormat,
   updateOrderContact,
