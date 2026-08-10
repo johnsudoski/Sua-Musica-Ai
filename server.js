@@ -63,6 +63,46 @@ global.downloadTokens = new Map(); // token → { orderId, expiresAt, filePath }
 // ─── Rotas da API ───
 app.get('/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 
+// DEBUG TEMPORÁRIO -- diagnosticar "Connection terminated unexpectedly" no
+// Postgres a partir de DENTRO do container (rede railway.internal só é
+// alcançável daqui, não do CLI local). Remover depois de resolvido.
+app.get('/api/debug/db-test', async (req, res) => {
+  const { Client } = require('pg');
+  const info = {
+    databaseUrlHost: (process.env.DATABASE_URL || '').replace(/:[^:@]+@/, ':***@'),
+    attempts: [],
+  };
+  for (let i = 1; i <= 3; i++) {
+    const start = Date.now();
+    const client = new Client({
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.DATABASE_URL?.includes('railway.internal') ? false : { rejectUnauthorized: false },
+      connectionTimeoutMillis: 8000,
+    });
+    try {
+      await client.connect();
+      const r = await client.query('SELECT 1 as ok, now() as ts');
+      info.attempts.push({ attempt: i, ok: true, ms: Date.now() - start, result: r.rows[0] });
+      await client.end();
+      break;
+    } catch (err) {
+      info.attempts.push({
+        attempt: i,
+        ok: false,
+        ms: Date.now() - start,
+        message: err.message,
+        code: err.code,
+        errno: err.errno,
+        syscall: err.syscall,
+        address: err.address,
+        port: err.port,
+      });
+      try { await client.end(); } catch (_) {}
+    }
+  }
+  res.json(info);
+});
+
 // ─── Teste de email (só em produção com token) ───
 app.get('/api/test-email', async (req, res) => {
   const token = req.query.token;
