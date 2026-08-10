@@ -9,6 +9,25 @@ const { Pool } = require('pg');
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.DATABASE_URL?.includes('railway.internal') ? false : { rejectUnauthorized: false },
+  // Railway/Postgres fecha conexões ociosas por volta de 30min. Sem essas
+  // opções, o pool mantém conexões "mortas" em cache e o próximo `pool.query`
+  // (ex.: o cron de recuperação de preview abandonado, que roda a cada 30min)
+  // estoura "Connection terminated unexpectedly". As opções abaixo fazem o
+  // pool reciclar conexões ociosas ANTES do timeout da infra e usam TCP
+  // keepalive para detectar conexões mortas rapidamente.
+  keepAlive: true,
+  keepAliveInitialDelayMillis: 10000, // começa a mandar keepalive após 10s de ociosidade
+  idleTimeoutMillis: 25 * 60 * 1000, // recicla conexões ociosas com 25min (margem segura abaixo do timeout de ~30min do Railway)
+  maxLifetimeSeconds: 30 * 60, // força reciclagem da conexão após 30min de vida, mesmo se estiver em uso intermitente
+  allowExitOnIdle: false,
+});
+
+// Conexões ociosas no pool podem ser fechadas pela infra (Railway) a
+// qualquer momento; sem esse handler, o erro emitido pelo client ocioso
+// não tem listener e derruba o processo Node inteiro. Aqui apenas logamos --
+// o pg-pool já remove o client morto e cria um novo na próxima query.
+pool.on('error', (err) => {
+  console.error('[db] Erro em conexão ociosa do pool (client removido/recriado):', err.message);
 });
 
 async function initSchema() {
