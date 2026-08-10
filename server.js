@@ -72,22 +72,26 @@ app.get('/api/debug/db-test', async (req, res) => {
     databaseUrlHost: (process.env.DATABASE_URL || '').replace(/:[^:@]+@/, ':***@'),
     attempts: [],
   };
-  for (let i = 1; i <= 3; i++) {
+  const variants = [
+    { label: 'ssl:false', ssl: false },
+    { label: 'ssl:{rejectUnauthorized:false}', ssl: { rejectUnauthorized: false } },
+    { label: 'ssl:undefined(default)', ssl: undefined },
+  ];
+  for (const variant of variants) {
     const start = Date.now();
     const client = new Client({
       connectionString: process.env.DATABASE_URL,
-      ssl: process.env.DATABASE_URL?.includes('railway.internal') ? false : { rejectUnauthorized: false },
+      ssl: variant.ssl,
       connectionTimeoutMillis: 8000,
     });
     try {
       await client.connect();
       const r = await client.query('SELECT 1 as ok, now() as ts');
-      info.attempts.push({ attempt: i, ok: true, ms: Date.now() - start, result: r.rows[0] });
+      info.attempts.push({ variant: variant.label, ok: true, ms: Date.now() - start, result: r.rows[0] });
       await client.end();
-      break;
     } catch (err) {
       info.attempts.push({
-        attempt: i,
+        variant: variant.label,
         ok: false,
         ms: Date.now() - start,
         message: err.message,
