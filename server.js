@@ -63,64 +63,6 @@ global.downloadTokens = new Map(); // token → { orderId, expiresAt, filePath }
 // ─── Rotas da API ───
 app.get('/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 
-// DEBUG TEMPORÁRIO -- diagnosticar "Connection terminated unexpectedly" no
-// Postgres a partir de DENTRO do container (rede railway.internal só é
-// alcançável daqui, não do CLI local). Remover depois de resolvido.
-app.get('/api/debug/db-test', async (req, res) => {
-  const { Client } = require('pg');
-  const net = require('net');
-  const info = {
-    databaseUrlHost: (process.env.DATABASE_URL || '').replace(/:[^:@]+@/, ':***@'),
-    rawTcp: await new Promise((resolve) => {
-      const start = Date.now();
-      const sock = net.connect({ host: 'postgres.railway.internal', port: 5432, timeout: 5000 });
-      sock.on('connect', () => { resolve({ ok: true, ms: Date.now() - start }); sock.destroy(); });
-      sock.on('timeout', () => { resolve({ ok: false, ms: Date.now() - start, err: 'timeout' }); sock.destroy(); });
-      sock.on('error', (e) => { resolve({ ok: false, ms: Date.now() - start, err: e.message }); });
-    }),
-    attempts: [],
-  };
-  const variants = [
-    { label: 'internal ssl:false', url: process.env.DATABASE_URL, ssl: false },
-    { label: 'internal ssl:{rejectUnauthorized:false}', url: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } },
-    { label: 'public ssl:{rejectUnauthorized:false}', url: process.env.DATABASE_PUBLIC_URL, ssl: { rejectUnauthorized: false } },
-  ];
-  for (const variant of variants) {
-    if (!variant.url) {
-      info.attempts.push({ variant: variant.label, ok: false, message: 'URL nao configurada (var ausente)' });
-      continue;
-    }
-    const start = Date.now();
-    const client = new Client({
-      connectionString: variant.url,
-      ssl: variant.ssl,
-      connectionTimeoutMillis: 8000,
-    });
-    try {
-      await client.connect();
-      const r = await client.query('SELECT 1 as ok, now() as ts');
-      info.attempts.push({ variant: variant.label, ok: true, ms: Date.now() - start, result: r.rows[0] });
-      await client.end();
-    } catch (err) {
-      info.attempts.push({
-        variant: variant.label,
-        ok: false,
-        ms: Date.now() - start,
-        message: err.message,
-        code: err.code,
-        errno: err.errno,
-        syscall: err.syscall,
-        address: err.address,
-        port: err.port,
-        cause: err.cause ? { message: err.cause.message, code: err.cause.code, library: err.cause.library, reason: err.cause.reason } : undefined,
-        stackTop: (err.stack || '').split('\n').slice(0, 3).join(' | '),
-      });
-      try { await client.end(); } catch (_) {}
-    }
-  }
-  res.json(info);
-});
-
 // ─── Teste de email (só em produção com token) ───
 app.get('/api/test-email', async (req, res) => {
   const token = req.query.token;
