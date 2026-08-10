@@ -124,15 +124,26 @@ async function sendViaSmtp({ to, from, subject, html, text }) {
     port: parseInt(process.env.SMTP_PORT || '587'),
     secure: process.env.SMTP_SECURE === 'true',
     auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
   });
   return transporter.sendMail({ from, to, subject, html, text });
 }
 
 // ── Opção 3: Gmail (sem a restrição de domínio do Resend em modo teste) ──
+// connectionTimeout/greetingTimeout/socketTimeout: sem isso, o nodemailer
+// deixa o SO decidir quando desistir (2min+ em ambientes cloud que bloqueiam
+// a porta SMTP de saída), travando o worker inteiro nesse tempo. Com os
+// providers configurados, isso NUNCA deveria ser o único caminho -- é só um
+// fallback que precisa falhar rápido se a rede não deixar completar.
 async function sendViaGmail({ to, from, subject, html, text }) {
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
   });
   return transporter.sendMail({ from, to, subject, html, text });
 }
