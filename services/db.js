@@ -62,6 +62,7 @@ async function initSchema() {
 
     CREATE INDEX IF NOT EXISTS idx_video_requests_email ON video_requests(email);
     CREATE INDEX IF NOT EXISTS idx_video_requests_status ON video_requests(status);
+    ALTER TABLE video_requests ADD COLUMN IF NOT EXISTS request_type TEXT NOT NULL DEFAULT 'tribute';
 
     CREATE TABLE IF NOT EXISTS orders (
       order_id TEXT PRIMARY KEY,

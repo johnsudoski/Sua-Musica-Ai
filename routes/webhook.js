@@ -313,6 +313,13 @@ async function handleUpsellAlbumPurchase(orderId, email) {
 
   const nomeDestinatario = row.form_data.nomeDestinatario;
   const songs = [];
+  // URLs brutas (não os tokens de download, que expiram em 48h e vivem só em
+  // memória) -- é o que o serviço de vídeo precisa pra montar o vídeo
+  // compilation, que pode rodar bem depois desse prazo.
+  const rawTracks = [];
+  if (row.full_audio_url) {
+    rawTracks.push({ tema: 'A música que já é sua', audioUrl: row.full_audio_url });
+  }
 
   for (const t of ALBUM_TEMAS_EXTRA) {
     try {
@@ -325,6 +332,7 @@ async function handleUpsellAlbumPurchase(orderId, email) {
       const token = crypto.randomBytes(32).toString('hex');
       global.downloadTokens.set(token, { orderId: `${orderId}-album-${songs.length}`, audioUrl, expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000) });
       songs.push({ tema: t.tema, downloadUrl: `${process.env.APP_URL}/api/download/${token}` });
+      rawTracks.push({ tema: t.tema, audioUrl });
     } catch (err) {
       console.error(`Upsell Álbum: falha ao gerar música do tema "${t.tema}" (orderId ${orderId}):`, err.message);
     }
@@ -351,6 +359,26 @@ async function handleUpsellAlbumPurchase(orderId, email) {
       temas: ['A música original que você já recebeu', ...ALBUM_TEMAS_EXTRA.map(t => t.tema)],
     });
   } catch (err) { console.error(`Upsell Álbum: falha ao gerar behind the scenes (orderId ${orderId}):`, err.message); }
+
+  // Vídeo Compilation (bônus prometido na página): delega pro serviço de
+  // vídeo, que renderiza via Creatomate de forma assíncrona -- pode levar
+  // alguns minutos, então roda em paralelo e avisa o cliente por email
+  // quando ficar pronto, sem bloquear a entrega principal (músicas + capa +
+  // behind the scenes) se essa etapa falhar.
+  if (process.env.VIDEO_SERVICE_URL && coverUrl && rawTracks.length >= 2) {
+    try {
+      await axios.post(
+        `${process.env.VIDEO_SERVICE_URL}/api/album-compilation`,
+        { requestId: `${orderId}-album-compilation`, email: emailTo, nomeDestinatario, tracks: rawTracks, coverUrl },
+        { timeout: 15000 }
+      );
+      console.log(`Upsell Álbum: vídeo compilation enfileirado no serviço de vídeo (orderId ${orderId})`);
+    } catch (err) {
+      console.error(`Upsell Álbum: falha ao enfileirar vídeo compilation (orderId ${orderId}):`, err.message);
+    }
+  } else {
+    console.warn(`Upsell Álbum: vídeo compilation NÃO enfileirado (orderId ${orderId}) -- VIDEO_SERVICE_URL=${!!process.env.VIDEO_SERVICE_URL} coverUrl=${!!coverUrl} faixas=${rawTracks.length}`);
+  }
 
   try {
     await emailService.sendUpsellAlbumEmail({ to: emailTo, nomeDestinatario, songs, coverUrl, timelineUrl, behindTheScenes });
