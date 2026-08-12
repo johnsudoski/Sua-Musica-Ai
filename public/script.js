@@ -25,6 +25,33 @@ function getOrStoreFbc() {
 
 var _metaFbc = getOrStoreFbc();
 
+// ─── UTM real do anúncio (Meta Ads) — capturada na entrada e repassada pro
+// checkout da Ticto. NÃO mexe em utm_campaign: esse parâmetro já é usado
+// como ID interno do pedido (ver webhook.js), então a UTM real do anúncio
+// vai em utm_source/utm_medium/utm_content/utm_term, que até agora nunca
+// eram repassados — por isso a Utmify não conseguia atribuir a venda a
+// nenhuma campanha (achado em 2026-08-11, ver docs/ads/). ───
+function getOrStoreAdUtms() {
+  var params = new URLSearchParams(window.location.search);
+  var incoming = {
+    utm_source:  params.get('utm_source'),
+    utm_medium:  params.get('utm_medium'),
+    utm_content: params.get('utm_content'),
+    utm_term:    params.get('utm_term'),
+  };
+  var hasIncoming = Object.keys(incoming).some(function (k) { return incoming[k]; });
+  if (hasIncoming) {
+    try { localStorage.setItem('sua_musica_ad_utms', JSON.stringify(incoming)); } catch (_) {}
+    return incoming;
+  }
+  try {
+    var stored = localStorage.getItem('sua_musica_ad_utms');
+    return stored ? JSON.parse(stored) : {};
+  } catch (_) { return {}; }
+}
+
+var _adUtms = getOrStoreAdUtms();
+
 // ─── Prova de demanda real (substitui "alta demanda" genérica por número real) ───
 fetch(API_BASE + '/api/stats/live')
   .then(function(r) { return r.json(); })
@@ -173,7 +200,7 @@ if (textarea && charCountEl) {
 
   window._quizContainer = quizContainer; // usado pelo submit handler pra esconder no loading
 
-  function goToStep(n) {
+  function goToStep(n, skipScroll) {
     if (n < 1) n = 1;
     if (n > totalSteps) n = totalSteps;
     currentStep = n;
@@ -181,6 +208,7 @@ if (textarea && charCountEl) {
     if (progressBar) progressBar.style.width = ((currentStep / totalSteps) * 100) + '%';
     if (stepNumEl) stepNumEl.textContent = currentStep;
     if (backBtn) backBtn.style.display = currentStep === 1 ? 'none' : 'block';
+    if (skipScroll) return; // init da página não deve rolar — lead precisa ver o vídeo primeiro
     requestAnimationFrame(function() {
       var rect = quizContainer.getBoundingClientRect();
       if (rect.top < 0 || rect.top > 220) {
@@ -300,7 +328,7 @@ if (textarea && charCountEl) {
     goToStep(1);
   };
 
-  goToStep(1);
+  goToStep(1, true); // init — sem rolar, o lead precisa ver o vídeo antes do formulário
 })();
 
 // ─── Estado ───
@@ -593,8 +621,13 @@ function openCheckout(productType) {
 
   try {
     var url = new URL(baseUrl);
-    if (_orderId) url.searchParams.set('utm_campaign', _orderId);
+    if (_orderId) url.searchParams.set('utm_campaign', _orderId); // ID interno do pedido — NÃO trocar, backend usa isso pra casar o webhook
     if (email)    url.searchParams.set('email', email);
+    // Repassa a UTM real do anúncio pra Ticto/Utmify (sem sobrescrever utm_campaign acima)
+    if (_adUtms.utm_source)  url.searchParams.set('utm_source', _adUtms.utm_source);
+    if (_adUtms.utm_medium)  url.searchParams.set('utm_medium', _adUtms.utm_medium);
+    if (_adUtms.utm_content) url.searchParams.set('utm_content', _adUtms.utm_content);
+    if (_adUtms.utm_term)    url.searchParams.set('utm_term', _adUtms.utm_term);
     window.open(url.toString(), '_blank');
   } catch(_) {
     window.open(baseUrl, '_blank');
